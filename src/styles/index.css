@@ -1,0 +1,299 @@
+@import 'tailwindcss';
+
+/* Sticky columns need somewhere to sit. The project showcase pins its column of
+   facts while the screens scroll past, but that column is around 760px tall —
+   it grew when the stack stopped being one line of running text and became a
+   block of chips — so on a short laptop it would be taller than the space
+   between the header and the bottom of the window, and its last rows would be
+   unreachable while pinned. `tall:` gates the behaviour on the viewport
+   actually being tall enough, and it degrades to ordinary flow when it is
+   not. */
+@custom-variant tall {
+  @media (min-height: 900px) {
+    @slot;
+  }
+}
+
+/* ===========================================================================
+   BANDS
+
+   The page alternates between two grounds as you scroll — warm paper and near
+   black. That alternation is the whole design: it gives the page a rhythm
+   without needing decoration, and it means each section can be quiet, because
+   the change of ground is what announces it.
+
+   Rather than two sets of colour utilities, there is one set of semantic names
+   (bg, fg, fg-soft, line…) pointing at variables that each band redefines. A
+   component says `bg-bg text-fg` once and is correct on both grounds — which is
+   why there is not a single `dark:` variant anywhere in this codebase.
+   =========================================================================== */
+@theme {
+  /* -- The paper band, and the defaults for the whole document. Each `data-band`
+        below re-declares these same names, which is what makes one set of
+        utilities correct on both grounds.
+
+        Note they are declared as literal values and overridden as literal
+        values — never as `--color-bg: var(--band-bg)`. An indirection like that
+        resolves once, at :root, and then inherits the already-substituted
+        result, so redefining the inner variable further down the tree does
+        nothing at all. ------------------------------------------------------ */
+  --color-bg: #f0ece4;
+  --color-bg-2: #e5e0d5;
+  --color-fg: #211f1b;
+  --color-fg-soft: #57544c;
+  --color-fg-faint: #67635b;
+  --color-line: oklch(0 0 0 / 0.14);
+  --color-line-soft: oklch(0 0 0 / 0.08);
+  --band-adjacent: #232220;
+
+  /* -- Fixed. The one accent, and the reason the dark band stops where it does:
+        it has to clear 3:1 on every ground it is drawn on, which caps how far
+        that band can be lifted (3.80:1 on paper, 3.55:1 on charcoal, 3.16:1 at
+        worst on a raised surface). It is used for focus, for hover underlines,
+        and for the small availability dot. Nothing else. --------------------- */
+  --color-accent: #d6440f;
+
+  /* -- Type. Two families. A serif at display sizes carries the elegance; the
+        grotesk carries everything that has to be read rather than looked at.
+        There is no third face for metadata — small caps in the grotesk do that
+        job and save a whole font download. ---------------------------------- */
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 10px;
+
+  --shell-max: 82rem;
+  --gutter: 1.5rem;
+}
+
+/* Paper is the document default, but `light` is declared explicitly as well:
+   the case study panel sets `data-band="light"` while nested inside the black
+   work section, and needs to switch the variables back. */
+[data-band='light'] {
+  --color-bg: #f0ece4;
+  --color-bg-2: #e5e0d5;
+  --color-fg: #211f1b;
+  --color-fg-soft: #57544c;
+  --color-fg-faint: #67635b;
+  --color-line: oklch(0 0 0 / 0.14);
+  --color-line-soft: oklch(0 0 0 / 0.08);
+  --band-adjacent: #232220;
+}
+
+/* Warm charcoal, not black. The two grounds used to sit at 96 and 5 on the
+   lightness scale, and scrolling between them read less like one page changing
+   register than like arriving at a different site. Pulling the paper down and
+   the dark ground up to a warm charcoal closes most of that gap and leaves the
+   alternation — which is what gives the page its structure — intact.
+
+   The dark ground cannot go further: the accent has to stay above 3:1 on it and
+   on the raised surface above it, and around this value it runs out. Every text
+   colour here clears 4.5:1 on both its own ground and that raised surface,
+   which the previous palette did not — the metadata grey was 3.6:1 on paper. */
+[data-band='dark'] {
+  --color-bg: #232220;
+  --color-bg-2: #2c2b28;
+  --color-fg: #f0ece4;
+  --color-fg-soft: #b2ada3;
+  --color-fg-faint: #a19c92;
+  --color-line: oklch(1 0 0 / 0.16);
+  --color-line-soft: oklch(1 0 0 / 0.09);
+  --band-adjacent: #f0ece4;
+}
+
+@media (min-width: 640px)  { :root { --gutter: 2.5rem; } }
+@media (min-width: 1024px) { :root { --gutter: 4rem; } }
+@media (min-width: 1536px) { :root { --gutter: 5.5rem; } }
+
+/* ===========================================================================
+   BASE
+   =========================================================================== */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--color-line);
+  }
+
+  html {
+    /* Paper, so an overscroll bounce at the top of the page shows the hero's
+       own ground rather than a strip of some other colour. */
+    background-color: #f0ece4;
+    -webkit-text-size-adjust: 100%;
+    /* `clip`, not `hidden`: it contains horizontal reveal transforms without
+       turning <html> into a scroll container, which would break both
+       position: sticky and Lenis. */
+    overflow-x: clip;
+  }
+
+  /* Lenis drives the real scroll position; native smooth-scroll fights it. */
+  html.lenis,
+  html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-stopped { overflow: hidden; }
+
+  body {
+    /* No background here — see the note on <html>. A background on <body> also
+       paints over anything at a negative z-index. */
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+
+  h1, h2, h3, h4 {
+    font-weight: 400;
+    text-wrap: balance;
+  }
+
+  p { text-wrap: pretty; }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  img { color-scheme: light; }
+}
+
+/* ===========================================================================
+   RECIPES
+   =========================================================================== */
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: var(--shell-max);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* -- The join between two bands. Each section fades in from the ground of the
+        one above it over its first 6rem, so the change of register happens
+        across a stretch of scrolling rather than at a single hard line. The
+        page alternates strictly, so "the ground above" is always the other
+        band, and `--band-adjacent` can be declared once per band.
+
+        A background-image rather than a pseudo-element, so it can never end up
+        painted over the section's own content, and 6rem because that is the
+        smallest top padding any section has — the seam always finishes before
+        the first line of anything. --------------------------------------- */
+  .band-seam {
+    background-image: linear-gradient(to bottom, var(--band-adjacent), var(--color-bg) 6rem);
+    background-repeat: no-repeat;
+  }
+
+  /* -- Display scale. Serif, and set loose rather than tight: at these sizes
+        the elegance comes from the letterforms having room, not from crushing
+        the tracking. ------------------------------------------------------- */
+  .display-1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    /* Scales harder than the rest of the system on purpose: this is only ever
+       the name, it is the one thing on the page allowed to be large, and at the
+       previous cap it left the lower half of the hero visibly empty. */
+    font-size: clamp(3rem, 10vw, 8.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+  .display-2 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2.25rem, 5.4vw, 4rem);
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+  }
+  /* -- Project names. Larger than a section heading, because on this page the
+        name of a shipped product is the more important of the two, and because
+        it is the line a visitor scanning the section is looking for. One word
+        per line in the markup keeps a long name off a single measure. ------- */
+  .display-project {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(2.5rem, 5.4vw, 4.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+  }
+
+  .display-3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 2.8vw, 2.125rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  /* -- Small caps metadata, in the grotesk. Replaces the mono label a denser
+        version of this page used everywhere. ------------------------------- */
+  .label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-fg-faint);
+  }
+
+  /* -- Body copy at reading width. --------------------------------------- */
+  .prose-body {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--color-fg-soft);
+  }
+  @media (min-width: 640px) {
+    .prose-body { font-size: 1.125rem; }
+  }
+
+  /* -- The one link treatment on the page: a rule that draws in from the left.
+        Used for every inline link so they are visibly one kind of thing. --- */
+  .link-underline {
+    background-image: linear-gradient(var(--color-accent), var(--color-accent));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0 1px;
+    transition: background-size 0.45s var(--ease-out-expo), color 0.3s;
+    padding-bottom: 2px;
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* The clipping window each line of a masked heading animates inside. */
+  .mask-line { display: block; overflow: hidden; }
+}
+
+/* ===========================================================================
+   MOTION SAFETY
+   <MotionConfig reducedMotion="user"> covers everything that goes through
+   Motion. This covers what does not: plain CSS transitions.
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "portfolio-contact-mailer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sends portfolio contact-form submissions to Varlee's inbox over Gmail SMTP.",
+  "engines": { "node": ">=20.6" },
+  "scripts": {
+    "start": "node index.mjs",
+    "test-email": "node send-test.mjs"
+  },
+  "dependencies": {
+    "nodemailer": "^7.0.9"
+  }
+}
