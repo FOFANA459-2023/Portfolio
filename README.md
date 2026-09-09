@@ -16,6 +16,87 @@ npm run dev
 | `npm run preview` | Serve the built `dist/` on port 4173 |
 | `npm run lint` | oxlint |
 | `npm run typecheck` | Types only, no build |
+| `npm test` | Unit and component tests (Vitest) |
+| `npm run test:coverage` | The same, with coverage gates |
+| `npm run test:e2e` | End-to-end and accessibility (Playwright) |
+| `npm run verify` | Everything CI runs, in the order CI runs it |
+
+---
+
+## Testing
+
+86 tests, in two layers.
+
+**Unit and component**, in `src/**/*.test.{ts,tsx}`, run by Vitest in jsdom.
+They cover the form validation rules, the contact delivery routing, the motion
+preference helpers, and the two components with real behaviour in them.
+Coverage is scoped to `src/lib` and `src/data` rather than averaged across a
+wall of presentational JSX, and gated at 95% statements and branches.
+
+`src/data/content.test.ts` is the unusual one: it enforces the editorial rules
+that would otherwise be undone by the next person to edit a string. No em or en
+dashes anywhere a visitor reads, no location for him, no "junior", no
+"internship", no count of the projects, https on every outbound link, and alt
+text on every screenshot.
+
+**End-to-end**, in `e2e/`, run by Playwright against `npm run preview`, which
+serves the built `dist/` rather than the dev server, because that is the
+artefact being deployed. Desktop and mobile both run. Alongside the usual
+journeys, `@axe-core/playwright` scans for WCAG 2.1 A and AA violations on the
+page and inside an open case study, and there are currently none.
+
+```bash
+npm run test:e2e:install   # once, to fetch the browser
+npm run test:e2e
+```
+
+---
+
+## CI/CD
+
+`.github/workflows/ci.yml` runs on every push and pull request to `main`, in
+five jobs:
+
+| Job | What it proves |
+| --- | --- |
+| **quality** | oxlint, `tsc -b` across app, config and e2e, unit tests, coverage gates |
+| **build** | The production build succeeds, and reports its own bundle size |
+| **e2e** | The built site passes 30 end-to-end and accessibility checks |
+| **security** | `npm audit --audit-level=high`, gitleaks over the history, and a grep of `dist/` for credential patterns |
+| **docker** | The mailer image builds, refuses to start misconfigured, and answers `/healthz` |
+
+The docker job is not just a build. It runs the image three times and asserts
+that it *refuses* to start without `ALLOWED_ORIGINS`, *refuses* a wildcard, and
+then answers its health endpoint when configured properly. It publishes to GHCR
+only from `main`.
+
+`codeql.yml` runs GitHub's `security-and-quality` query pack, and
+`dependabot.yml` groups dependency updates so that React, the test tools and
+the build tools each arrive as one pull request rather than five.
+
+`deploy.yml` publishes to Cloudflare on a green CI run only. `workflow_run`
+fires on failure too, so it checks the conclusion explicitly rather than
+trusting the trigger.
+
+### Deploying
+
+The site is a Cloudflare Worker serving static assets, configured in
+`wrangler.jsonc`. There is a small Worker in `worker/index.js` in front of the
+assets for one reason: response headers. A pure assets deployment cannot set a
+Content-Security-Policy, and this one does, along with HSTS, a referrer policy
+and the rest.
+
+Two repository secrets and one variable make the deploy work:
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | secret | A token with **Workers Scripts: Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | secret | From the Cloudflare dashboard |
+| `VITE_CONTACT_ENDPOINT` | variable | The mailer's URL, once it has a host |
+
+There is no `public/_redirects`. That is Pages syntax, and Workers rejects it
+as *"Infinite loop detected in this rule"*; the single-page fallback is
+`assets.not_found_handling` in `wrangler.jsonc` instead.
 
 ---
 
@@ -31,7 +112,8 @@ over Gmail SMTP using the template in `server/email.mjs`, so the mail that arriv
 is designed rather than generic, and Reply goes straight back to the sender.
 
 ```bash
-cp server/.env.example server/.env    # fill in GMAIL_USER + GMAIL_APP_PASSWORD
+cp server/.env.example server/.env    # fill in GMAIL_USER, GMAIL_APP_PASSWORD,
+                                      # and ALLOWED_ORIGINS
 cd server && npm install && npm start # listens on :8787
 npm run test-email                    # sends one sample enquiry to yourself
 ```
@@ -47,13 +129,26 @@ delivery is SMTP over a raw TCP socket, which a browser cannot open and neither 
 an edge runtime like Cloudflare Workers. Any always-on Node host works; the same
 Oracle Cloud Always Free VM that runs the other two projects is the obvious one.
 
-Two rules that matter:
+### What keeps it safe
 
+- **Nothing is hard-coded.** No address, domain or credential appears in any
+  committed file — `index.mjs` and `email.mjs` read everything from the
+  environment, so both are safe to publish as they are.
 - **The app password never goes in a `VITE_*` variable.** Vite inlines those into
-  the bundle it ships, so it would be readable by anyone who opens the page source.
-  It lives only in `server/.env`, which is gitignored.
-- **Set `ALLOWED_ORIGIN`** to the real site once deployed. Left at `*`, any page on
-  the internet can post through the endpoint.
+  the bundle it ships, so it would be readable by anyone who opens the page
+  source. It lives only in `server/.env`, ignored by the root `.gitignore` and
+  again by `server/.gitignore`.
+- **`ALLOWED_ORIGINS` is required and cannot be `*`.** The process refuses to
+  start without an explicit list, and refuses a wildcard outright — a mailer
+  that quietly accepts the whole internet is worse than one that will not boot.
+  Add the real site to the list when you deploy.
+- **The origin check is enforced, not advertised.** A request whose `Origin` is
+  not on the list gets a 403 and no `Access-Control-Allow-Origin` header at all,
+  because CORS is a rule browsers choose to obey and `curl` does not.
+- Five messages per IP per hour, a 32KB body cap, length and format checks on
+  every field, a honeypot that accepts and drops silently, HTML-escaping of
+  everything a sender typed, and `Reply-To` rather than a forged `From` — Gmail
+  rewrites the envelope sender anyway.
 
 ### Route B — Web3Forms (no server to run)
 
@@ -171,10 +266,24 @@ src/
 └─ styles/index.css           theme tokens + band definitions + base layers
 
 server/                        separate package, never imported by the site
-├─ index.mjs                   POST /api/contact -> Gmail SMTP
+├─ index.mjs                   POST /api/contact -> Gmail SMTP, GET /healthz
 ├─ email.mjs                   the enquiry email, table-based and inline-styled
 ├─ send-test.mjs               sends one sample enquiry to yourself
+├─ Dockerfile                  multi-stage, non-root, with a health check
 └─ .env                        GMAIL_APP_PASSWORD lives here, and only here
+                               (gitignored twice over)
+
+e2e/                           Playwright specs, run against the built dist/
+worker/index.js                the Cloudflare Worker: assets + security headers
+wrangler.jsonc                 Cloudflare deployment config
+.github/workflows/             ci.yml, deploy.yml, codeql.yml
+```
+
+The mailer runs anywhere Node or Docker runs:
+
+```bash
+docker build -t contact-mailer ./server
+docker run -p 8787:8787 --env-file server/.env contact-mailer
 ```
 
 ### Bands are the design

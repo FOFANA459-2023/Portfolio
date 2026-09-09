@@ -61,6 +61,10 @@ function formatWhen(date, timeZone) {
 }
 
 /**
+ * No default carries a real name, address or domain: anything identifying is
+ * passed in by the caller, which reads it from the environment. This file is
+ * therefore safe to publish as-is.
+ *
  * @param {{ name: string, email: string, message: string, siteName?: string,
  *           origin?: string, timeZone?: string, sentAt?: Date }} enquiry
  * @returns {{ subject: string, html: string, text: string, replyTo: string }}
@@ -70,16 +74,18 @@ export function buildEnquiryEmail(enquiry) {
     name,
     email,
     message,
-    siteName = 'varleefofana.com',
+    siteName,
     origin = 'Portfolio contact form',
-    timeZone = 'Asia/Tokyo',
+    timeZone = process.env.TZ || 'UTC',
     sentAt = new Date(),
   } = enquiry
 
   const when = formatWhen(sentAt, timeZone)
   const safeName = escapeHtml(name)
   const safeEmail = escapeHtml(email)
-  const replySubject = encodeURIComponent(`Re: your message from ${siteName}`)
+  const replySubject = encodeURIComponent(
+    siteName ? `Re: your message from ${siteName}` : 'Re: your message',
+  )
 
   const html = `<!doctype html>
 <html lang="en">
@@ -92,7 +98,7 @@ export function buildEnquiryEmail(enquiry) {
   <body style="margin:0;padding:0;background-color:${PAPER};">
     <!-- Preheader: the grey line of text a client shows next to the subject. -->
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
-      ${safeName} &lt;${safeEmail}&gt; — sent from your portfolio contact form.
+      ${safeName} &lt;${safeEmail}&gt;, sent from your portfolio contact form.
     </div>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -164,7 +170,7 @@ export function buildEnquiryEmail(enquiry) {
 </html>`
 
   const text = [
-    `NEW ENQUIRY — ${origin}`,
+    `NEW ENQUIRY: ${origin}`,
     '',
     `From:    ${name}`,
     `Email:   ${email}`,
@@ -180,7 +186,7 @@ export function buildEnquiryEmail(enquiry) {
   ].join('\n')
 
   return {
-    subject: `Portfolio enquiry — ${name}`,
+    subject: `Portfolio enquiry from ${name}`,
     html,
     text,
     replyTo: email,

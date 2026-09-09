@@ -65,7 +65,7 @@ export function ContactForm() {
     return (
       <motion.div
         role="status"
-        className="flex min-h-[22rem] flex-col items-start justify-center gap-4 rounded-md border border-line-soft bg-bg-2 p-8 sm:p-10"
+        className="flex min-h-[22rem] flex-col items-start justify-center gap-4 rounded-2xl border border-line-soft bg-bg-2 p-8 sm:p-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -76,7 +76,7 @@ export function ContactForm() {
         <h3 className="display-3">Message sent.</h3>
         <p className="prose-body max-w-[44ch] text-base">
           Thanks for writing. It lands in my inbox directly and I read everything that
-          arrives there — expect a reply within a day or two.
+          arrives there.
         </p>
         <button
           type="button"
@@ -93,10 +93,10 @@ export function ContactForm() {
     <form
       onSubmit={submit}
       noValidate
-      className="relative rounded-md border border-line-soft bg-bg-2 p-6 sm:p-9"
+      className="relative rounded-2xl border border-line-soft bg-bg-2/80 p-6 shadow-[0_24px_50px_-32px_oklch(0.1_0.02_50_/_0.8)] sm:p-9"
     >
       {!isContactConfigured && (
-        <p className="mb-8 rounded-sm border border-accent/40 px-4 py-3 text-[0.875rem] leading-relaxed text-accent">
+        <p className="mb-8 rounded-lg border border-accent/40 bg-accent-soft px-4 py-3 text-[0.875rem] leading-relaxed text-accent">
           <strong className="font-medium">Setup needed:</strong> set{' '}
           <code>VITE_CONTACT_ENDPOINT</code> to a running instance of{' '}
           <code>server/</code>, or <code>VITE_WEB3FORMS_KEY</code> to a Web3Forms access
@@ -165,7 +165,7 @@ export function ContactForm() {
           disabled={status === 'submitting'}
           className={cn(
             'inline-flex min-w-[10rem] items-center justify-center gap-2.5 rounded-full',
-            'border border-fg bg-fg px-6 py-3 text-[0.9375rem] text-bg',
+            'border border-fg bg-fg px-7 py-3.5 text-[0.9375rem] text-bg',
             'transition-opacity duration-300 hover:opacity-85',
             'disabled:cursor-not-allowed disabled:opacity-60',
           )}
@@ -182,8 +182,6 @@ export function ContactForm() {
             'Send message'
           )}
         </button>
-
-        <p className="text-[0.875rem] text-fg-faint">Usually a reply within a day or two.</p>
       </div>
 
       {/* role="alert" so a failure is announced, not merely coloured. */}
@@ -237,7 +235,7 @@ function TextField({
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined
 
   const inputClass = cn(
-    'w-full rounded-sm border bg-transparent px-4 py-3 text-[0.9375rem] text-fg',
+    'w-full rounded-lg border bg-bg/40 px-4 py-3.5 text-[0.9375rem] text-fg',
     'transition-colors duration-300 placeholder:text-fg-faint',
     'focus:border-accent focus:outline-none',
     error ? 'border-accent' : 'border-line hover:border-fg-faint',

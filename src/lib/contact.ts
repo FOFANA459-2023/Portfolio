@@ -57,7 +57,7 @@ function requestBody(payload: ContactPayload): { url: string; body: unknown } {
     body: {
       access_key: accessKey,
       subject: `Portfolio enquiry from ${payload.name}`,
-      from_name: `${site.name} — portfolio`,
+      from_name: `${site.name} via portfolio`,
       // Puts the sender's address on Reply-To, so replying from Gmail works.
       replyto: payload.email,
       name: payload.name,

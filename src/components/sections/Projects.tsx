@@ -28,7 +28,7 @@ export function Projects() {
       <SectionHeading
         label="Projects"
         title={['Products', 'in production.']}
-        lede="Each of these is live, with people using it, and opens into a case study — the problem, what I built, and the parts that turned out to be harder than they look."
+        lede="Each of these is live, with people using it, and opens into a case study: the problem, what I built, and the parts that turned out to be harder than they look."
         className="mb-12 sm:mb-14"
       />
 

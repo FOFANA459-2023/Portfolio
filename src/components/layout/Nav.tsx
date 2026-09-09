@@ -63,7 +63,7 @@ export function Nav() {
         className={cn(
           'fixed inset-x-0 top-0 z-80 text-fg',
           'transition-[background-color,border-color,color] duration-700 ease-out-expo',
-          scrolled ? 'border-b border-line-soft bg-bg/80 backdrop-blur-xl' : 'border-b border-transparent',
+          scrolled ? 'border-b border-line-soft bg-bg/72 backdrop-blur-2xl' : 'border-b border-transparent',
         )}
         initial={{ y: -NAV_HEIGHT }}
         animate={{ y: 0 }}
@@ -77,7 +77,7 @@ export function Nav() {
           <button
             type="button"
             onClick={() => go('top')}
-            className="group flex shrink-0 items-center gap-2.5 text-[0.9375rem] transition-opacity hover:opacity-70"
+            className="group flex shrink-0 items-center gap-2.5 font-serif text-[1.0625rem] tracking-tight transition-opacity hover:opacity-70"
           >
             {site.available && (
               <span className="relative flex h-1.5 w-1.5" aria-hidden>
@@ -86,7 +86,7 @@ export function Nav() {
               </span>
             )}
             {site.name}
-            <span className="sr-only">— back to top</span>
+            <span className="sr-only">, back to top</span>
           </button>
 
           <ul className="hidden items-center gap-1 md:flex">
@@ -99,7 +99,7 @@ export function Nav() {
                     onClick={() => go(section.id)}
                     aria-current={isActive ? 'true' : undefined}
                     className={cn(
-                      'relative px-4 py-2 text-[0.9375rem] transition-opacity duration-300',
+                      'relative px-4 py-2 text-[0.875rem] tracking-wide transition-opacity duration-300',
                       isActive ? 'opacity-100' : 'opacity-55 hover:opacity-100',
                     )}
                   >
@@ -121,7 +121,7 @@ export function Nav() {
             <button
               type="button"
               onClick={() => go('contact')}
-              className="hidden rounded-full border border-line px-5 py-2 text-[0.9375rem] transition-colors duration-300 hover:border-fg hover:bg-fg hover:text-bg md:block"
+              className="hidden rounded-full border border-line px-5 py-2 text-[0.8125rem] tracking-wide transition-colors duration-300 hover:border-fg hover:bg-fg hover:text-bg md:block"
             >
               Get in touch
             </button>

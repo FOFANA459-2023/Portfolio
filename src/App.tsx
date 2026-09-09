@@ -27,7 +27,7 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <a
         href="#projects"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-300 focus:rounded-full focus:bg-[#211f1b] focus:px-5 focus:py-3 focus:text-[0.9375rem] focus:text-[#f0ece4]"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-300 focus:rounded-full focus:bg-[#1a1714] focus:px-5 focus:py-3 focus:text-[0.9375rem] focus:text-[#f4efe6]"
       >
         Skip to the projects
       </a>

@@ -34,8 +34,8 @@ export function ProjectIndex({ projects }: ProjectIndexProps) {
                 onClick={() => scrollToSection(`project-${project.id}`)}
                 className={cn(
                   'group grid w-full grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-4',
-                  'border-b border-line py-4 text-left transition-colors duration-300',
-                  'hover:bg-bg-2 sm:gap-x-6 sm:py-5',
+                  'border-b border-line py-5 text-left transition-[background-color,padding] duration-300',
+                  'hover:bg-bg-2/80 sm:gap-x-6 sm:py-6',
                   'lg:grid-cols-[3.25rem_14rem_minmax(0,1fr)_auto]',
                 )}
               >
@@ -52,7 +52,7 @@ export function ProjectIndex({ projects }: ProjectIndexProps) {
                 </span>
 
                 <span className="min-w-0">
-                  <span className="block truncate font-serif text-xl leading-tight transition-transform duration-300 ease-out-expo group-hover:translate-x-1 sm:text-2xl">
+                  <span className="block truncate font-serif text-xl leading-tight italic transition-transform duration-300 ease-out-expo group-hover:translate-x-1 sm:text-[1.65rem]">
                     {project.title}
                   </span>
                   {/* Below lg there is no third column, so the category rides
@@ -62,7 +62,7 @@ export function ProjectIndex({ projects }: ProjectIndexProps) {
 
                 <span className="hidden min-w-0 truncate text-[0.8125rem] text-fg-faint lg:block">
                   {project.category}
-                  <span aria-hidden> — </span>
+                  <span aria-hidden> · </span>
                   {project.stack.slice(0, 3).join(', ')}
                 </span>
 

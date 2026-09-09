@@ -17,8 +17,8 @@
 /* ===========================================================================
    BANDS
 
-   The page alternates between two grounds as you scroll — warm paper and near
-   black. That alternation is the whole design: it gives the page a rhythm
+   The page alternates between two grounds as you scroll — warm ivory and
+   espresso. That alternation is the whole design: it gives the page a rhythm
    without needing decoration, and it means each section can be quiet, because
    the change of ground is what announces it.
 
@@ -37,73 +37,60 @@
         resolves once, at :root, and then inherits the already-substituted
         result, so redefining the inner variable further down the tree does
         nothing at all. ------------------------------------------------------ */
-  --color-bg: #f0ece4;
-  --color-bg-2: #e5e0d5;
-  --color-fg: #211f1b;
-  --color-fg-soft: #57544c;
-  --color-fg-faint: #67635b;
-  --color-line: oklch(0 0 0 / 0.14);
-  --color-line-soft: oklch(0 0 0 / 0.08);
-  --band-adjacent: #232220;
+  --color-bg: #f4efe6;
+  --color-bg-2: #ebe3d6;
+  --color-fg: #1a1714;
+  --color-fg-soft: #5a534a;
+  --color-fg-faint: #6e675d;
+  --color-line: oklch(0.32 0.02 70 / 0.16);
+  --color-line-soft: oklch(0.32 0.02 70 / 0.09);
+  --band-adjacent: #13110f;
 
   /* -- Fixed. The one accent, and the reason the dark band stops where it does:
         it has to clear 3:1 on every ground it is drawn on, which caps how far
-        that band can be lifted (3.80:1 on paper, 3.55:1 on charcoal, 3.16:1 at
-        worst on a raised surface). It is used for focus, for hover underlines,
-        and for the small availability dot. Nothing else. --------------------- */
-  --color-accent: #d6440f;
+        that band can be lifted. Used for focus, hover underlines, the active
+        nav marker and the availability dot. -------------------------------- */
+  --color-accent: #e24a16;
+  --color-accent-soft: oklch(0.68 0.17 42 / 0.18);
 
-  /* -- Type. Two families. A serif at display sizes carries the elegance; the
-        grotesk carries everything that has to be read rather than looked at.
-        There is no third face for metadata — small caps in the grotesk do that
-        job and save a whole font download. ---------------------------------- */
-  --font-serif: 'Instrument Serif', ui-serif, Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* -- Type. Fraunces at display sizes (optical sizing, a little wonk) carries
+        the character; Outfit carries everything that has to be read. Small
+        caps in the grotesk still do the metadata job. ---------------------- */
+  --font-serif: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
 
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 10px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
 
   --shell-max: 82rem;
   --gutter: 1.5rem;
 }
 
-/* Paper is the document default, but `light` is declared explicitly as well:
-   the case study panel sets `data-band="light"` while nested inside the black
-   work section, and needs to switch the variables back. */
 [data-band='light'] {
-  --color-bg: #f0ece4;
-  --color-bg-2: #e5e0d5;
-  --color-fg: #211f1b;
-  --color-fg-soft: #57544c;
-  --color-fg-faint: #67635b;
-  --color-line: oklch(0 0 0 / 0.14);
-  --color-line-soft: oklch(0 0 0 / 0.08);
-  --band-adjacent: #232220;
+  --color-bg: #f4efe6;
+  --color-bg-2: #ebe3d6;
+  --color-fg: #1a1714;
+  --color-fg-soft: #5a534a;
+  --color-fg-faint: #6e675d;
+  --color-line: oklch(0.32 0.02 70 / 0.16);
+  --color-line-soft: oklch(0.32 0.02 70 / 0.09);
+  --band-adjacent: #13110f;
 }
 
-/* Warm charcoal, not black. The two grounds used to sit at 96 and 5 on the
-   lightness scale, and scrolling between them read less like one page changing
-   register than like arriving at a different site. Pulling the paper down and
-   the dark ground up to a warm charcoal closes most of that gap and leaves the
-   alternation — which is what gives the page its structure — intact.
-
-   The dark ground cannot go further: the accent has to stay above 3:1 on it and
-   on the raised surface above it, and around this value it runs out. Every text
-   colour here clears 4.5:1 on both its own ground and that raised surface,
-   which the previous palette did not — the metadata grey was 3.6:1 on paper. */
 [data-band='dark'] {
-  --color-bg: #232220;
-  --color-bg-2: #2c2b28;
-  --color-fg: #f0ece4;
-  --color-fg-soft: #b2ada3;
-  --color-fg-faint: #a19c92;
-  --color-line: oklch(1 0 0 / 0.16);
-  --color-line-soft: oklch(1 0 0 / 0.09);
-  --band-adjacent: #f0ece4;
+  --color-bg: #13110f;
+  --color-bg-2: #1d1a17;
+  --color-fg: #f4efe6;
+  --color-fg-soft: #b7aea3;
+  --color-fg-faint: #9a9186;
+  --color-line: oklch(0.92 0.02 80 / 0.14);
+  --color-line-soft: oklch(0.92 0.02 80 / 0.08);
+  --band-adjacent: #f4efe6;
 }
 
 @media (min-width: 640px)  { :root { --gutter: 2.5rem; } }
@@ -121,25 +108,17 @@
   }
 
   html {
-    /* Paper, so an overscroll bounce at the top of the page shows the hero's
-       own ground rather than a strip of some other colour. */
-    background-color: #f0ece4;
+    background-color: #f4efe6;
     -webkit-text-size-adjust: 100%;
-    /* `clip`, not `hidden`: it contains horizontal reveal transforms without
-       turning <html> into a scroll container, which would break both
-       position: sticky and Lenis. */
     overflow-x: clip;
   }
 
-  /* Lenis drives the real scroll position; native smooth-scroll fights it. */
   html.lenis,
   html.lenis body { height: auto; }
   .lenis.lenis-smooth { scroll-behavior: auto !important; }
   .lenis.lenis-stopped { overflow: hidden; }
 
   body {
-    /* No background here — see the note on <html>. A background on <body> also
-       paints over anything at a negative z-index. */
     color: var(--color-fg);
     font-family: var(--font-sans);
     font-size: 1rem;
@@ -165,10 +144,23 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
-    border-radius: 2px;
+    border-radius: 6px;
   }
 
   img { color-scheme: light; }
+}
+
+/* Film grain sits above the page and does not capture events. Overlay blend
+   keeps it readable on both ivory and espresso. */
+html::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  pointer-events: none;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.32  0 0 0 0 0.22  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
 /* ===========================================================================
@@ -182,73 +174,69 @@
     padding-inline: var(--gutter);
   }
 
-  /* -- The join between two bands. Each section fades in from the ground of the
-        one above it over its first 6rem, so the change of register happens
-        across a stretch of scrolling rather than at a single hard line. The
-        page alternates strictly, so "the ground above" is always the other
-        band, and `--band-adjacent` can be declared once per band.
-
-        A background-image rather than a pseudo-element, so it can never end up
-        painted over the section's own content, and 6rem because that is the
-        smallest top padding any section has — the seam always finishes before
-        the first line of anything. --------------------------------------- */
   .band-seam {
     background-image: linear-gradient(to bottom, var(--band-adjacent), var(--color-bg) 6rem);
     background-repeat: no-repeat;
   }
 
-  /* -- Display scale. Serif, and set loose rather than tight: at these sizes
-        the elegance comes from the letterforms having room, not from crushing
-        the tracking. ------------------------------------------------------- */
   .display-1 {
     font-family: var(--font-serif);
     font-weight: 400;
-    /* Scales harder than the rest of the system on purpose: this is only ever
-       the name, it is the one thing on the page allowed to be large, and at the
-       previous cap it left the lower half of the hero visibly empty. */
-    font-size: clamp(3rem, 10vw, 8.5rem);
-    line-height: 0.95;
-    letter-spacing: -0.02em;
+    font-optical-sizing: auto;
+    font-size: clamp(3.25rem, 11vw, 9rem);
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    font-variation-settings: 'SOFT' 40, 'WONK' 1;
   }
   .display-2 {
     font-family: var(--font-serif);
     font-weight: 400;
-    font-size: clamp(2.25rem, 5.4vw, 4rem);
-    line-height: 1.02;
-    letter-spacing: -0.015em;
+    font-optical-sizing: auto;
+    font-size: clamp(2.35rem, 5.6vw, 4.25rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variation-settings: 'SOFT' 30, 'WONK' 0.5;
   }
-  /* -- Project names. Larger than a section heading, because on this page the
-        name of a shipped product is the more important of the two, and because
-        it is the line a visitor scanning the section is looking for. One word
-        per line in the markup keeps a long name off a single measure. ------- */
   .display-project {
     font-family: var(--font-serif);
     font-weight: 400;
-    font-size: clamp(2.5rem, 5.4vw, 4.5rem);
-    line-height: 0.98;
-    letter-spacing: -0.02em;
+    font-optical-sizing: auto;
+    font-size: clamp(2.6rem, 5.6vw, 4.75rem);
+    line-height: 0.96;
+    letter-spacing: -0.025em;
   }
 
   .display-3 {
     font-family: var(--font-serif);
     font-weight: 400;
-    font-size: clamp(1.5rem, 2.8vw, 2.125rem);
-    line-height: 1.15;
-    letter-spacing: -0.01em;
+    font-optical-sizing: auto;
+    font-size: clamp(1.55rem, 2.9vw, 2.25rem);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
   }
 
-  /* -- Small caps metadata, in the grotesk. Replaces the mono label a denser
-        version of this page used everywhere. ------------------------------- */
   .label {
     font-size: 0.6875rem;
     font-weight: 500;
     line-height: 1.4;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--color-fg-faint);
   }
 
-  /* -- Body copy at reading width. --------------------------------------- */
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .kicker::before {
+    content: '';
+    width: 1.75rem;
+    height: 1px;
+    background: var(--color-accent);
+    flex-shrink: 0;
+  }
+
   .prose-body {
     font-size: 1.0625rem;
     line-height: 1.75;
@@ -258,19 +246,68 @@
     .prose-body { font-size: 1.125rem; }
   }
 
-  /* -- The one link treatment on the page: a rule that draws in from the left.
-        Used for every inline link so they are visibly one kind of thing. --- */
   .link-underline {
     background-image: linear-gradient(var(--color-accent), var(--color-accent));
     background-repeat: no-repeat;
     background-position: 0 100%;
-    background-size: 0 1px;
+    background-size: 0 1.5px;
     transition: background-size 0.45s var(--ease-out-expo), color 0.3s;
     padding-bottom: 2px;
   }
   .link-underline:hover,
   .link-underline:focus-visible {
-    background-size: 100% 1px;
+    background-size: 100% 1.5px;
+  }
+
+  .hero-atmosphere {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 52% 48% at 82% 78%, oklch(0.72 0.16 45 / 0.28), transparent 68%),
+      radial-gradient(ellipse 42% 36% at 8% 12%, oklch(0.82 0.06 85 / 0.35), transparent 62%),
+      radial-gradient(ellipse 28% 22% at 48% 42%, oklch(0.78 0.08 70 / 0.12), transparent 70%);
+  }
+
+  .hero-grid {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, oklch(0.3 0.02 70 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.3 0.02 70 / 0.05) 1px, transparent 1px);
+    background-size: 4.5rem 4.5rem;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 20%, transparent 75%);
+  }
+
+  .portrait-halo {
+    position: relative;
+  }
+  .portrait-halo::before {
+    content: '';
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: 4%;
+    top: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 60%, oklch(0.68 0.16 45 / 0.45), transparent 68%);
+    filter: blur(28px);
+    z-index: 0;
+  }
+  .portrait-halo img {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 24px 40px oklch(0.25 0.04 50 / 0.28));
+  }
+
+  .section-glow {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 55% 42% at 92% 8%, oklch(0.55 0.14 45 / 0.22), transparent 58%),
+      radial-gradient(ellipse 38% 32% at 6% 96%, oklch(0.42 0.06 70 / 0.18), transparent 62%);
   }
 }
 
@@ -278,15 +315,9 @@
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
-  /* The clipping window each line of a masked heading animates inside. */
   .mask-line { display: block; overflow: hidden; }
 }
 
-/* ===========================================================================
-   MOTION SAFETY
-   <MotionConfig reducedMotion="user"> covers everything that goes through
-   Motion. This covers what does not: plain CSS transitions.
-   =========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

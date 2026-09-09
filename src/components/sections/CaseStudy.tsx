@@ -114,7 +114,7 @@ export function CaseStudy({ project, onClose }: CaseStudyProps) {
            attribute makes Lenis walk the event path, find this element, and
            leave the gesture to the browser. */
         data-lenis-prevent
-        className="absolute inset-y-0 right-0 w-full overflow-y-auto overscroll-contain bg-bg text-fg outline-none sm:max-w-2xl lg:max-w-4xl"
+        className="absolute inset-y-0 right-0 w-full overflow-y-auto overscroll-contain bg-bg text-fg shadow-[-24px_0_80px_-40px_oklch(0.1_0.02_50_/_0.7)] outline-none sm:max-w-2xl lg:max-w-4xl"
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
@@ -143,7 +143,7 @@ export function CaseStudy({ project, onClose }: CaseStudyProps) {
                   href={project.liveUrl}
                   variant="solid"
                   size="sm"
-                  label={`${project.liveLabel ?? 'Live demo'} — ${project.title}`}
+                  label={`${project.liveLabel ?? 'Live demo'} for ${project.title}`}
                 >
                   {project.liveLabel ?? 'Live demo'}
                 </ExternalLink>
@@ -213,7 +213,7 @@ export function CaseStudy({ project, onClose }: CaseStudyProps) {
                 // and out of the row the other two are sitting on.
                 <div key={metric.label} className="flex flex-col-reverse gap-2 self-start">
                   <dt className="text-[0.75rem] leading-snug text-fg-faint">{metric.label}</dt>
-                  <dd className="font-serif text-[1.75rem] leading-none sm:text-[2.25rem]">
+                  <dd className="font-serif text-[1.75rem] italic leading-none sm:text-[2.25rem]">
                     {metric.value}
                   </dd>
                 </div>
@@ -288,7 +288,7 @@ export function CaseStudy({ project, onClose }: CaseStudyProps) {
           {/* The end of a case study is the moment someone has decided what
               they think. It should not be a dead stop — it should be the two
               things they might want next. */}
-          <div className="mt-16 rounded-lg bg-bg-2 p-6 sm:p-8">
+          <div className="mt-16 rounded-2xl border border-line-soft bg-bg-2 p-6 sm:p-8">
             <p className="label">Where to next</p>
             <p className="display-3 mt-3 max-w-[24ch]">Go and use it, or read the source.</p>
 

@@ -107,7 +107,7 @@ export function ProjectShowcase({ project, index, onOpen }: ProjectShowcaseProps
             <Reveal delay={0.14}>
               {/* flex-col-reverse: the number reads first, while the markup keeps
                   the term-then-definition order a description list expects. */}
-              <dl className="mt-9 grid grid-cols-3 gap-x-4 gap-y-5 border-y border-line py-6">
+              <dl className="mt-9 grid grid-cols-3 gap-x-4 gap-y-5 border-y border-line py-7">
                 {project.metrics.map((metric) => (
                   <div key={metric.label} className="flex flex-col-reverse gap-1.5">
                     {/* Two lines' worth of height whether the label needs it or
@@ -118,7 +118,7 @@ export function ProjectShowcase({ project, index, onOpen }: ProjectShowcaseProps
                     <dt className="min-h-[2.75em] text-[0.6875rem] leading-snug text-fg-faint">
                       {metric.label}
                     </dt>
-                    <dd className="font-serif text-2xl leading-none sm:text-[1.75rem]">
+                    <dd className="font-serif text-[1.65rem] leading-none italic sm:text-[1.9rem]">
                       {metric.value}
                     </dd>
                   </div>
@@ -147,7 +147,7 @@ export function ProjectShowcase({ project, index, onOpen }: ProjectShowcaseProps
             <button
               type="button"
               onClick={open}
-              className="group/case mt-4 flex w-full items-center justify-between gap-4 rounded-md border border-line px-5 py-4 text-left transition-colors duration-300 hover:border-fg hover:bg-bg-2"
+              className="group/case mt-4 flex w-full items-center justify-between gap-4 rounded-2xl border border-line bg-bg-2/50 px-5 py-4 text-left transition-colors duration-300 hover:border-fg hover:bg-bg-2"
             >
               <span className="min-w-0">
                 <span className="block text-[0.9375rem] text-fg">Read the case study</span>
@@ -179,7 +179,7 @@ export function ProjectShowcase({ project, index, onOpen }: ProjectShowcaseProps
                 <button
                   type="button"
                   onClick={open}
-                  aria-label={`${project.title} — open the case study`}
+                  aria-label={`Open the case study for ${project.title}`}
                   className="group block w-full text-left"
                 >
                   <Frame
@@ -187,7 +187,7 @@ export function ProjectShowcase({ project, index, onOpen }: ProjectShowcaseProps
                     caption={i === 0 ? domain : shot.caption}
                     className={cn(
                       'transition-[transform,box-shadow] duration-700 ease-out-expo',
-                      'group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-black/25',
+                      'group-hover:-translate-y-2 group-hover:shadow-[0_32px_60px_-28px_oklch(0.08_0.02_50_/_0.85)]',
                       'group-focus-visible:-translate-y-1.5',
                     )}
                   />
@@ -199,7 +199,7 @@ export function ProjectShowcase({ project, index, onOpen }: ProjectShowcaseProps
               <button
                 type="button"
                 onClick={open}
-                aria-label={`${project.title} — open the case study`}
+                aria-label={`Open the case study for ${project.title}`}
                 className="group block w-full text-left"
               >
                 <Frame caption={domain}>

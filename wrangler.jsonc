@@ -1,0 +1,41 @@
+{
+  // Hosted rather than "node_modules/wrangler/config-schema.json": wrangler is
+  // not a dependency of this repo. It pulls miniflare, which pulls a sharp
+  // carrying a high-severity advisory, and adding a vulnerable package so that
+  // `npm audit` has to be softened is the wrong trade. CI deploys with
+  // cloudflare/wrangler-action, which brings its own.
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+
+  // Must match the Cloudflare Workers Builds project name, which defaults to
+  // the repository name. A mismatch makes CI override it and warn on every
+  // build.
+  "name": "varlee-portfolio",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-09",
+  "observability": { "enabled": true },
+
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+
+    // This replaces the Pages-style `public/_redirects` file, which Workers
+    // rejects outright as "Infinite loop detected in this rule". The site is a
+    // single page, so any path that is not a real file resolves to index.html
+    // and the in-page anchors take over from there.
+    "not_found_handling": "single-page-application",
+
+    // Every request goes through the Worker so it can attach the security
+    // headers; without this, assets are served directly and unmodified.
+    "run_worker_first": ["/*"]
+  },
+
+  "vars": {
+    // The origin the contact form is allowed to POST to, named here so it can
+    // go into the Content-Security-Policy without being hard-coded in the
+    // Worker. Leave it empty and the policy allows same-origin only, which is
+    // correct while the form is still routed through Web3Forms.
+    //
+    // TODO: set this to the deployed mailer's origin once server/ has a host.
+    "CONTACT_ORIGIN": ""
+  }
+}

@@ -53,6 +53,15 @@ export function ArrowUpRightIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
   )
 }
 
+/** Sits on the resume link. A tray with an arrow into it, not a floppy disk. */
+export function DownloadIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
+  return (
+    <svg {...stroke} strokeWidth="1.7" className={className} aria-hidden>
+      <path d="M12 3.5v11M7.5 10 12 14.5 16.5 10M4.5 17.5v1.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-1.5" />
+    </svg>
+  )
+}
+
 export function ArrowDownIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
   return (
     <svg {...stroke} strokeWidth="1.8" className={className} aria-hidden>

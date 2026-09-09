@@ -4,7 +4,7 @@ import { Section } from '@/components/ui/Section'
 import { AnimatedText } from '@/components/ui/AnimatedText'
 import { Reveal } from '@/components/ui/Reveal'
 import { ContactForm } from './ContactForm'
-import { CopyIcon, CheckIcon, ArrowUpRightIcon } from '@/components/ui/Icons'
+import { CopyIcon, CheckIcon, ArrowUpRightIcon, DownloadIcon } from '@/components/ui/Icons'
 import { socialIcons } from '@/components/ui/social-icons'
 
 /**
@@ -16,7 +16,7 @@ export function Contact() {
     <Section id="contact" band="dark">
       <div className="max-w-4xl">
         <Reveal direction="none">
-          <p className="label mb-6 sm:mb-8">Contact</p>
+          <p className="label kicker mb-6 sm:mb-8">Contact</p>
         </Reveal>
         <AnimatedText
           as="h2"
@@ -26,8 +26,8 @@ export function Contact() {
         />
         <Reveal delay={0.15}>
           <p className="prose-body mt-8 max-w-[52ch]">
-            I am looking for a software engineering role — frontend or full-stack — and
-            I am open to freelance work. If you have a role, a project, or a question
+            I am looking for a full-stack or frontend software engineering role, and I
+            am open to freelance work. If you have a role, a project, or a question
             about anything above, this reaches me directly.
           </p>
         </Reveal>
@@ -42,7 +42,7 @@ export function Contact() {
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <a
                 href={`mailto:${site.email}`}
-                className="link-underline text-lg text-fg sm:text-xl"
+                className="link-underline font-serif text-xl italic text-fg sm:text-2xl"
               >
                 {site.email}
               </a>
@@ -74,6 +74,22 @@ export function Contact() {
                       </li>
                     )
                   })}
+
+                {/* The resume sits with the other places to find him rather
+                    than in its own block: a recruiter scanning this column is
+                    looking for exactly one of these four things, and a list is
+                    faster to scan than four headings. */}
+                <li>
+                  <a
+                    href={site.resumeUrl}
+                    download={site.resumeFileName}
+                    className="group flex items-center gap-3 border-b border-line-soft py-3.5 text-[0.9375rem] text-fg-soft transition-colors hover:text-fg"
+                  >
+                    <DownloadIcon className="h-4 w-4 shrink-0" />
+                    Resume
+                    <span className="label ml-auto">PDF</span>
+                  </a>
+                </li>
               </ul>
             </div>
           </Reveal>
@@ -127,7 +143,7 @@ function CopyEmailButton({ email }: { email: string }) {
     <button
       type="button"
       onClick={copy}
-      className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-1.5 text-[0.8125rem] text-fg-faint transition-colors hover:border-fg hover:text-fg"
+      className="inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-1.5 text-[0.8125rem] text-fg-faint transition-colors hover:border-fg hover:bg-fg hover:text-bg"
     >
       {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
       <span aria-live="polite">{copied ? 'Copied' : 'Copy'}</span>

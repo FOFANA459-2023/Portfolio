@@ -28,12 +28,12 @@ const sample = {
   email: 'mei.tanaka@example.com',
   message: `Hi Varlee,
 
-I came across your portfolio while looking for a frontend intern for our team in Fukuoka. The scholarship platform is the one that made me get in touch — a two-hundred-test pipeline on a solo project is not something we see often.
+I came across your portfolio while looking for a frontend intern for our team in Fukuoka. The scholarship platform is the one that made me get in touch. A two-hundred-test pipeline on a solo project is not something we see often.
 
 Would you have twenty minutes this week for a call?
 
 Mei`,
-  origin: 'Portfolio contact form — test send',
+  origin: 'Portfolio contact form, test send',
 }
 
 const mail = buildEnquiryEmail(sample)
@@ -44,7 +44,7 @@ const transport = nodemailer.createTransport({
 })
 
 const info = await transport.sendMail({
-  from: `"Portfolio — ${sample.name}" <${GMAIL_USER}>`,
+  from: `"${sample.name} via portfolio" <${GMAIL_USER}>`,
   to: CONTACT_TO,
   replyTo: mail.replyTo,
   subject: `${mail.subject} (test)`,

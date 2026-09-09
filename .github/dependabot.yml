@@ -1,0 +1,45 @@
+version: 2
+
+updates:
+  # The site and its toolchain.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for the things that always move together, rather than five that
+      # each fail CI until the last one lands.
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']
+      testing:
+        patterns: ['vitest', '@vitest/*', '@testing-library/*', '@playwright/test', '@axe-core/*']
+      build:
+        patterns: ['vite', '@vitejs/*', 'tailwindcss', '@tailwindcss/*', 'typescript', 'oxlint']
+    commit-message:
+      prefix: 'deps'
+
+  # The contact mailer, which has its own lockfile.
+  - package-ecosystem: npm
+    directory: /server
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: 'deps(server)'
+
+  # The workflows themselves. A pinned action is a dependency like any other.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'ci'
+
+  - package-ecosystem: docker
+    directory: /server
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'docker'

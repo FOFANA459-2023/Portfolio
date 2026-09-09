@@ -26,7 +26,7 @@ export function SectionHeading({ label, title, lede, className }: SectionHeading
   return (
     <header className={cn('max-w-4xl', className)}>
       <Reveal direction="none">
-        <p className="label mb-6 sm:mb-8">{label}</p>
+        <p className="label kicker mb-6 sm:mb-8">{label}</p>
       </Reveal>
 
       <AnimatedText as="h2" lines={title} className="display-2 max-w-[18ch]" stagger={0.08} />

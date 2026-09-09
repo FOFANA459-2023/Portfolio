@@ -1,0 +1,4 @@
+# Defence in depth. The repository root already ignores `.env` at any depth;
+# this keeps the secret covered even if `server/` is copied somewhere else.
+.env
+node_modules

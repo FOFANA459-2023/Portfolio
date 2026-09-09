@@ -48,10 +48,12 @@ export function Section({
         'scroll-mt-14 bg-bg text-fg',
         seam && 'band-seam',
         tight ? 'py-20 sm:py-24' : 'py-24 sm:py-32 lg:py-40',
+        band === 'dark' && 'relative overflow-clip',
         className,
       )}
     >
-      <div className="shell">{children}</div>
+      {band === 'dark' && <div className="section-glow" aria-hidden />}
+      <div className="relative shell">{children}</div>
     </section>
   )
 }

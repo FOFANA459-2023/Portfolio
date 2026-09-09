@@ -51,7 +51,7 @@ export function About() {
           <Reveal>
             <dl>
               {site.meta.map((entry) => (
-                <div key={entry.term} className="border-t border-line-soft py-4">
+                <div key={entry.term} className="border-t border-line-soft py-5 first:border-t-0 first:pt-0">
                   <dt className="label mb-1.5">{entry.term}</dt>
                   <dd className="flex items-center gap-2.5 text-[0.9375rem] text-fg-soft">
                     {entry.highlight && (
@@ -75,8 +75,8 @@ export function About() {
           one or two clean lines, and the space the biography leaves empty on
           the left gets used. */}
       <Reveal delay={0.1}>
-        <div className="mt-20 border-t border-line pt-10 sm:mt-24">
-          <p className="label mb-8">Tech stack</p>
+        <div className="mt-20 rounded-2xl border border-line-soft bg-bg-2/60 p-6 pt-8 sm:mt-24 sm:p-10">
+          <p className="label kicker mb-8">Tech stack</p>
           <div className="grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
             {skillGroups.map((group) => (
               <div key={group.name} className="min-w-0">

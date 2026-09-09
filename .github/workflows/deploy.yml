@@ -1,0 +1,68 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # A deploy you cannot trigger by hand is a deploy you cannot roll forward
+  # from at three in the morning.
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  cloudflare:
+    name: Cloudflare Workers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Only from a green CI run. `workflow_run` fires on failure too, so without
+    # this the pipeline would cheerfully publish a build that failed its tests.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    # Gives the deployment a URL in the repository's Environments tab, and a
+    # place to require an approval later without touching this file.
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.deployment-url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Rebuilt rather than pulled from the CI run's artifact: an artifact is
+      # addressed by run id and can be replaced, and the thing being published
+      # should be built from the commit being deployed.
+      - name: Build
+        run: npm run build
+        env:
+          VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT }}
+          VITE_WEB3FORMS_KEY: ${{ secrets.VITE_WEB3FORMS_KEY }}
+
+      - name: Deploy
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Check the deployment answers
+        run: |
+          URL="${{ steps.deploy.outputs.deployment-url }}"
+          test -n "$URL" || { echo "::error::No deployment URL returned."; exit 1; }
+          curl -fsS -o /dev/null -w 'status %{http_code}\n' "$URL"
+          echo "Deployed to $URL" >> "$GITHUB_STEP_SUMMARY"

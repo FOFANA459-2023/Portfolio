@@ -45,7 +45,7 @@ export function TechStack({ items, limit, size = 'sm', className }: TechStackPro
         <li
           key={item}
           className={cn(
-            'whitespace-nowrap rounded-full border border-line bg-bg-2',
+            'whitespace-nowrap rounded-full border border-line/80 bg-bg-2/80',
             sizes[size],
           )}
         >

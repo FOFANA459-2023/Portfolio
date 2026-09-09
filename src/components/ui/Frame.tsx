@@ -46,12 +46,12 @@ export function Frame({
   aspect = 'aspect-[16/10]',
 }: FrameProps) {
   return (
-    <figure className={cn('rounded-lg bg-bg-2 p-3 sm:p-5 lg:p-6', className)}>
+    <figure className={cn('rounded-2xl bg-bg-2 p-3 shadow-[0_20px_50px_-28px_oklch(0.15_0.03_50_/_0.7)] sm:p-5 lg:p-6', className)}>
       {caption && (
         <figcaption className="label px-1 pb-4 pt-0.5">{caption}</figcaption>
       )}
 
-      <div className={cn('relative overflow-hidden rounded-md bg-bg', aspect)}>
+      <div className={cn('relative overflow-hidden rounded-xl bg-bg ring-1 ring-line-soft', aspect)}>
         {shot ? (
           <motion.img
             src={shot.src}

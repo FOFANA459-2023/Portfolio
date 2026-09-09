@@ -62,13 +62,14 @@ export function MobileMenu({ active, onNavigate, onClose, onClosed }: MobileMenu
       aria-modal="true"
       aria-label="Menu"
       data-band="light"
-      className="fixed inset-0 z-75 bg-bg text-fg md:hidden"
+      className="fixed inset-0 z-75 overflow-hidden bg-bg text-fg md:hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="shell flex h-full flex-col justify-between pb-12 pt-24">
+      <div className="hero-atmosphere opacity-70" aria-hidden />
+      <div className="relative shell flex h-full flex-col justify-between pb-12 pt-24">
         <ul>
           {site.sections.map((section, i) => (
             <motion.li
@@ -84,7 +85,7 @@ export function MobileMenu({ active, onNavigate, onClose, onClosed }: MobileMenu
                 aria-current={active === section.id ? 'true' : undefined}
                 className="flex w-full items-center justify-between py-5 text-left"
               >
-                <span className={cn('display-3', active !== section.id && 'text-fg-soft')}>
+                <span className={cn('display-3 italic', active !== section.id && 'text-fg-soft')}>
                   {section.label}
                 </span>
                 {active === section.id && (

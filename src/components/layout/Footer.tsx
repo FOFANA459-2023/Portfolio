@@ -10,9 +10,9 @@ import { socialIcons } from '@/components/ui/social-icons'
 export function Footer() {
   return (
     <footer data-band="dark" className="border-t border-line-soft bg-bg text-fg">
-      <div className="shell flex flex-col gap-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="shell flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[0.875rem] text-fg-faint">
-          © {new Date().getFullYear()} {site.name} — designed and built from scratch
+          © {new Date().getFullYear()} {site.name}
         </p>
 
         <div className="flex items-center justify-between gap-8 sm:justify-end">
@@ -26,7 +26,7 @@ export function Footer() {
                     href={social.url}
                     {...(isExternal ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
                     aria-label={isExternal ? `${social.label} (opens in a new tab)` : social.label}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-fg-faint transition-colors hover:text-fg"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-fg-faint transition-colors hover:border-line hover:text-fg"
                   >
                     <Icon className="h-4 w-4" />
                   </a>
@@ -38,7 +38,7 @@ export function Footer() {
           <button
             type="button"
             onClick={scrollToTop}
-            className="text-[0.875rem] text-fg-faint transition-colors hover:text-fg"
+            className="rounded-full border border-line px-4 py-2 text-[0.8125rem] text-fg-faint transition-colors hover:border-fg hover:text-fg"
           >
             Back to top
           </button>

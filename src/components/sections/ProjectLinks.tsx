@@ -25,7 +25,7 @@ export function ProjectLinks({ project, size = 'md', className }: ProjectLinksPr
           href={project.liveUrl}
           variant="solid"
           size={size}
-          label={`${project.liveLabel ?? 'Live demo'} — ${project.title}`}
+          label={`${project.liveLabel ?? 'Live demo'} for ${project.title}`}
         >
           {project.liveLabel ?? 'Live demo'}
         </ExternalLink>
@@ -37,7 +37,7 @@ export function ProjectLinks({ project, size = 'md', className }: ProjectLinksPr
             key={repo.url}
             href={repo.url}
             size={size}
-            label={`${repo.label} repository — ${project.title}`}
+            label={`${repo.label} repository for ${project.title}`}
           >
             {repo.label}
           </ExternalLink>

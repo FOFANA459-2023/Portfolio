@@ -24,22 +24,25 @@ export const site = {
 
   email: 'fvarlee@gmail.com',
 
+  /** Served from `public/`, so the path is the filename. Kept capitalised
+   *  because it is also the name the file lands under when downloaded. */
+  resumeUrl: '/Varlee-Fofana-Resume.pdf',
+  resumeFileName: 'Varlee-Fofana-Resume.pdf',
+
   available: true,
-  availabilityLabel: 'Open to software engineering roles — frontend and full-stack',
+  availabilityLabel: 'Open to full-stack and frontend software engineering roles',
 
   /** The hero. Two sentences, no "passionate", no adjectives about himself. */
   positioning:
-    'I build web products end to end — the data model, the API, and the interface people actually touch.',
+    'I build web products end to end: the data model, the API, and the interface people actually touch.',
 
-  /** The About narrative. Three paragraphs, and no more than three.
+  /** The About narrative. One paragraph, in his own words.
    *
-   *  Engineering and nothing else. No count of the projects — the section
-   *  below names them, and a number in front of the work makes the work sound
-   *  like a quantity rather than a body of it. */
+   *  It does the thing a biography on a hiring page rarely does: it says what
+   *  the two halves of his life have to do with each other, and then proves it
+   *  with four specific engineering habits rather than an adjective. */
   bio: [
-    'I build web products end to end: a scholarship platform, a study assistant that answers from a real course, and an e-commerce storefront. On each one I wrote the schema, the API, the interface, the tests, and the deployment that puts it in front of people.',
-    'That means the parts that are easy to skip did not get skipped. Authentication and role-based access. A pipeline that runs more than two hundred tests before anything reaches production. A checkout where the browser is never trusted with a price. Retrieval over a 216-page textbook that turned out to have no extractable text in it at all. Where a product needs a server, it runs on infrastructure I provisioned and still maintain.',
-    'I am reading Accounting and Finance at Ritsumeikan Asia Pacific University, and I write software because it is the part I did not want to stop doing. I am looking for a software engineering role — frontend or full-stack — somewhere the code reaches real users, because that is the only kind I have written.',
+    'Full-stack software engineer building production web products end to end, and reading accounting and finance at Ritsumeikan Asia Pacific University. The two overlap directly in the systems I build. I price from the database rather than trusting the browser, keep derived data from drifting away from its source, put the trust boundary on the server, and let the tests prove it before anything ships.',
   ],
 
   /** The metadata rail beside the About narrative. Facts, not adjectives. */
@@ -48,7 +51,7 @@ export const site = {
     { term: 'Working in', value: 'TypeScript · React · Node · Python · PostgreSQL' },
     { term: 'Also', value: 'Django · Express · Docker · Cloudflare · Stripe' },
     { term: 'Studying', value: 'Accounting & Finance, Ritsumeikan APU' },
-    { term: 'Open to', value: 'Software engineering roles — frontend, full-stack', highlight: true },
+    { term: 'Open to', value: 'Full-stack and frontend engineering roles', highlight: true },
   ] satisfies MetaEntry[],
 
   socials: [
