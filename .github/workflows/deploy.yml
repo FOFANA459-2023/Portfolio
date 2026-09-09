@@ -44,14 +44,47 @@ jobs:
 
       - run: npm ci
 
+      # Read from either a secret or a variable, because which box a value
+      # belongs in is a judgement call and putting it in the other one should
+      # not silently ship a site with no contact form. The Web3Forms key is a
+      # public client-side identifier, so a variable is arguably the more
+      # honest home for it; both work.
+      - name: Resolve the contact route
+        id: contact
+        env:
+          ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT || secrets.VITE_CONTACT_ENDPOINT }}
+          KEY: ${{ vars.VITE_WEB3FORMS_KEY || secrets.VITE_WEB3FORMS_KEY }}
+        run: |
+          if [ -n "$ENDPOINT" ]; then
+            echo "route=the mailer in server/" >> "$GITHUB_OUTPUT"
+          elif [ -n "$KEY" ]; then
+            echo "route=Web3Forms" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Neither VITE_WEB3FORMS_KEY nor VITE_CONTACT_ENDPOINT is set, so this build would ship with no contact form. Add one under Settings, Secrets and variables, Actions. Either a secret or a variable is read."
+            exit 1
+          fi
+
       # Rebuilt rather than pulled from the CI run's artifact: an artifact is
       # addressed by run id and can be replaced, and the thing being published
       # should be built from the commit being deployed.
       - name: Build
         run: npm run build
         env:
-          VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT }}
-          VITE_WEB3FORMS_KEY: ${{ secrets.VITE_WEB3FORMS_KEY }}
+          VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT || secrets.VITE_CONTACT_ENDPOINT }}
+          VITE_WEB3FORMS_KEY: ${{ vars.VITE_WEB3FORMS_KEY || secrets.VITE_WEB3FORMS_KEY }}
+
+      # The guard above proves a value reached the workflow. This proves it
+      # reached the bundle, which is a different claim: Vite only inlines a
+      # variable that is present when it runs, and a deploy that quietly ships
+      # an email address where a form should be is exactly the failure this
+      # pipeline exists to catch.
+      - name: Confirm the form is in the build
+        run: |
+          if grep -rq "Email is the fastest way to reach me" dist/assets/*.js; then
+            echo "::error::The build fell back to an email address, so no delivery route was inlined. Check the name of the secret or variable."
+            exit 1
+          fi
+          echo "Contact form present, delivering through ${{ steps.contact.outputs.route }}." >> "$GITHUB_STEP_SUMMARY"
 
       # v4 of the action, and the wrangler version named rather than defaulted.
       #
