@@ -13,8 +13,15 @@
  * form has to be allowed to reach it.
  */
 
-/** @param {string | undefined} contactOrigin */
-function securityHeaders(contactOrigin) {
+/**
+ * Exported so the policy can be asserted rather than assumed. A
+ * Content-Security-Policy that forbids the one host the contact form posts to
+ * fails silently in the browser, with no server-side error and nothing in the
+ * page to explain it.
+ *
+ * @param {string | undefined} contactOrigin
+ */
+export function securityHeaders(contactOrigin) {
   const connect = ["'self'", contactOrigin].filter(Boolean).join(' ')
 
   return {

@@ -30,12 +30,14 @@
   },
 
   "vars": {
-    // The origin the contact form is allowed to POST to, named here so it can
-    // go into the Content-Security-Policy without being hard-coded in the
-    // Worker. Leave it empty and the policy allows same-origin only, which is
-    // correct while the form is still routed through Web3Forms.
+    // The one origin the contact form is allowed to POST to, named here so it
+    // reaches the Content-Security-Policy without being hard-coded in the
+    // Worker.
     //
-    // TODO: set this to the deployed mailer's origin once server/ has a host.
-    "CONTACT_ORIGIN": ""
+    // This must match whatever `src/lib/contact.ts` actually posts to, or the
+    // browser blocks the submission and the form fails with no visible cause.
+    // Web3Forms is the delivery route, so it is that API. Change this if the
+    // self-hosted mailer in `server/` is ever used instead.
+    "CONTACT_ORIGIN": "https://api.web3forms.com"
   }
 }

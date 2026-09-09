@@ -102,64 +102,84 @@ as *"Infinite loop detected in this rule"*; the single-page fallback is
 
 ## The contact form
 
-Messages have two possible routes to the inbox. Set one of them; the form shows a
-visible "Setup needed" notice rather than failing silently while neither is set.
+Messages have two possible routes to the inbox, and the site picks whichever is
+configured at build time. Neither set, and the form is not shown at all: a
+visitor gets the email address instead, because a form that cannot deliver
+takes a message and loses it.
 
-### Route A — the mailer in `server/` (what is set up now)
+### Route A, and the one in use: Web3Forms
 
-A ~150-line Node service with one dependency. It sends from **fvarlee@gmail.com**
-over Gmail SMTP using the template in `server/email.mjs`, so the mail that arrives
-is designed rather than generic, and Reply goes straight back to the sender.
+No server, nothing to host, nothing to maintain.
+
+1. Go to [web3forms.com](https://web3forms.com) and enter the destination
+   address. Web3Forms only ever delivers to whichever address created the key.
+2. Put the key into `.env.local` as `VITE_WEB3FORMS_KEY`, and add the **same
+   variable** in GitHub under Settings, Secrets and variables, Actions. Vite
+   bakes env vars in at build time, so a local `.env.local` never reaches
+   production.
+
+That key is a public, client-side identifier by design: it is readable in the
+shipped bundle by anyone who opens the page source, and that is expected. It
+identifies a destination, it does not authorise anything. It lives in an env var
+so it can be rotated without editing source, not because it is secret.
+
+The trade is Web3Forms' own email template rather than the one in
+`server/email.mjs`.
+
+**`CONTACT_ORIGIN` in `wrangler.jsonc` has to match whatever the form posts
+to**, or the Content-Security-Policy blocks the submission and the form fails
+with nothing in the page to explain why. `worker/index.test.js` asserts that
+directive rather than trusting it.
+
+### Route B: the mailer in `server/`
+
+A ~150-line Node service with one dependency, kept because it delivers a
+designed email rather than a generic one, and because it is the route that uses
+your own Gmail rather than a third party.
 
 ```bash
-cp server/.env.example server/.env    # fill in GMAIL_USER, GMAIL_APP_PASSWORD,
-                                      # and ALLOWED_ORIGINS
+cp server/.env.example server/.env    # GMAIL_USER, GMAIL_APP_PASSWORD,
+                                      # ALLOWED_ORIGINS
 cd server && npm install && npm start # listens on :8787
 npm run test-email                    # sends one sample enquiry to yourself
 ```
 
-Then point the site at it:
+Then point the site at it, which takes precedence over the key above:
 
 ```
 VITE_CONTACT_ENDPOINT=http://localhost:8787/api/contact
 ```
 
-**This needs a Node process running somewhere.** That is not a preference — Gmail
-delivery is SMTP over a raw TCP socket, which a browser cannot open and neither can
-an edge runtime like Cloudflare Workers. Any always-on Node host works; the same
-Oracle Cloud Always Free VM that runs the other two projects is the obvious one.
+**It needs a Node process running somewhere reachable over HTTPS.** That is not
+a preference: Gmail delivery is SMTP over a raw TCP socket, which a browser
+cannot open and neither can an edge runtime like Cloudflare Workers. Any
+always-on Node host works. It is deliberately not sharing a host with anything
+else, and the image publishes to GHCR on every push to `main`:
 
-### What keeps it safe
+```bash
+docker run -d --restart unless-stopped -p 8787:8787   -e GMAIL_USER=... -e GMAIL_APP_PASSWORD=...   -e ALLOWED_ORIGINS=https://your-site   ghcr.io/fofana459-2023/portfolio/contact-mailer:latest
+```
+
+#### What keeps that route safe
 
 - **Nothing is hard-coded.** No address, domain or credential appears in any
-  committed file — `index.mjs` and `email.mjs` read everything from the
+  committed file. `index.mjs` and `email.mjs` read everything from the
   environment, so both are safe to publish as they are.
-- **The app password never goes in a `VITE_*` variable.** Vite inlines those into
-  the bundle it ships, so it would be readable by anyone who opens the page
+- **The app password never goes in a `VITE_*` variable.** Vite inlines those
+  into the bundle it ships, so it would be readable by anyone who opens the page
   source. It lives only in `server/.env`, ignored by the root `.gitignore` and
   again by `server/.gitignore`.
 - **`ALLOWED_ORIGINS` is required and cannot be `*`.** The process refuses to
-  start without an explicit list, and refuses a wildcard outright — a mailer
-  that quietly accepts the whole internet is worse than one that will not boot.
-  Add the real site to the list when you deploy.
+  start without an explicit list, and refuses a wildcard outright, because a
+  mailer that quietly accepts the whole internet is worse than one that will not
+  boot.
 - **The origin check is enforced, not advertised.** A request whose `Origin` is
   not on the list gets a 403 and no `Access-Control-Allow-Origin` header at all,
   because CORS is a rule browsers choose to obey and `curl` does not.
 - Five messages per IP per hour, a 32KB body cap, length and format checks on
   every field, a honeypot that accepts and drops silently, HTML-escaping of
-  everything a sender typed, and `Reply-To` rather than a forged `From` — Gmail
-  rewrites the envelope sender anyway.
-
-### Route B — Web3Forms (no server to run)
-
-1. Go to [web3forms.com](https://web3forms.com) and enter **fvarlee@gmail.com**.
-   Web3Forms delivers to whichever address created the key, so it has to be that one.
-2. Put the access key into `.env.local` as `VITE_WEB3FORMS_KEY`, and add the **same
-   variable** in the host's dashboard — Vite bakes env vars in at build time, so a
-   local `.env.local` never reaches production.
-
-That key is a public, client-side identifier by design and is safe in the shipped
-bundle. The trade is their default email template instead of ours.
+  everything a sender typed, and `Reply-To` rather than a forged `From`, since
+  Gmail rewrites the envelope sender anyway.
 
 ## Still to do
 
