@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   # Advisories are published against dependencies that have not changed, so the
-  # audit job needs a reason to run on a repository nobody has touched.
+  # security job needs a reason to run on a repository nobody has touched.
   schedule:
     - cron: '0 6 * * 1'
 
@@ -32,9 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -54,8 +54,8 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/
@@ -69,9 +69,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -81,12 +81,14 @@ jobs:
 
       - name: Report bundle size
         run: |
-          echo "### Bundle" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          du -h -d 1 dist | sort -h >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '### Bundle'
+            echo '```'
+            du -h -d 1 dist | sort -h
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -102,16 +104,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - run: npm ci
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist
@@ -122,23 +124,25 @@ jobs:
         id: pw
         run: echo "version=$(node -p "require('./node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
 
-      - name: Install browsers
-        run: npx playwright install --with-deps chromium
+      - name: Install browser and its system libraries
         if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
 
-      - name: Install system dependencies
-        run: npx playwright install-deps chromium
+      # The browser binary is cached; the apt packages it links against are
+      # not, because they live outside the cached path.
+      - name: Install system libraries
         if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - run: npm run test:e2e
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -150,15 +154,16 @@ jobs:
   # --------------------------------------------------------------------------
   security:
     name: Security
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
-          # Gitleaks diffs the history, so it needs the history.
+          # Gitleaks walks the history, so it needs the history.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -168,26 +173,39 @@ jobs:
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
+      # The binary rather than the action: gitleaks-action gates on a licence
+      # for some account types and fails in ways that have nothing to do with
+      # this repository. A pinned release does the same scan with one fewer
+      # moving part and one fewer third party in the supply chain.
       - name: Scan history for secrets
-        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: '8.30.1'
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks git . --redact --no-banner --exit-code 1
 
       # The one thing a build cannot catch: a secret that made it into the
       # bundle. Vite inlines every VITE_* variable, so this is the tripwire for
-      # someone naming a private key VITE_SOMETHING.
-      - name: Build and check the bundle for secrets
+      # someone naming a private key VITE_SOMETHING. Run against the artefact
+      # the build job produced, not a fresh build, so it checks the bytes that
+      # would actually be deployed.
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+
+      - name: Check the built bundle for credentials
         run: |
-          npm run build
           if grep -rIEq "sk_(test|live)_|service_role|whsec_|-----BEGIN [A-Z ]*PRIVATE KEY-----|AIza[0-9A-Za-z_-]{35}" dist/; then
             echo "::error::A credential pattern was found in the built bundle."
+            grep -rIEn "sk_(test|live)_|service_role|whsec_|-----BEGIN [A-Z ]*PRIVATE KEY-----|AIza[0-9A-Za-z_-]{35}" dist/ | head -5
             exit 1
           fi
           echo "No credential patterns in dist/."
 
   # --------------------------------------------------------------------------
-  # The mailer image. Built on every change so a broken Dockerfile is caught
-  # here, and published only from main.
+  # The mailer image. Built and proven before it is published, never after.
   # --------------------------------------------------------------------------
   docker:
     name: Mailer image
@@ -197,64 +215,105 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v4
 
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}/contact-mailer
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=long
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
+      # Loaded into the local daemon and not pushed, so the smoke test below
+      # runs against the exact image that would be published rather than
+      # against something already public.
+      - name: Build
+        uses: docker/build-push-action@v7
         with:
           context: ./server
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+          tags: contact-mailer:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          load: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
 
       # A built image that will not start is not a passing build. This proves
-      # the entrypoint runs, the fail-closed checks work, and the health
-      # endpoint answers, before anything is published.
-      - name: Smoke test the image
+      # the fail-closed checks work and the health endpoint answers, before
+      # anything is published.
+      - name: Smoke test
         run: |
-          IMAGE=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          set -euo pipefail
+          IMAGE=contact-mailer:ci
 
-          echo "It must refuse to start without an origin allowlist:"
+          echo "::group::Refuses to start without an origin allowlist"
           if docker run --rm -e GMAIL_USER=a@b.com -e GMAIL_APP_PASSWORD=x "$IMAGE"; then
             echo "::error::The mailer started without ALLOWED_ORIGINS."
             exit 1
           fi
+          echo "::endgroup::"
 
-          echo "It must refuse a wildcard allowlist:"
-          if docker run --rm -e GMAIL_USER=a@b.com -e GMAIL_APP_PASSWORD=x -e ALLOWED_ORIGINS='*' "$IMAGE"; then
+          echo "::group::Refuses a wildcard allowlist"
+          if docker run --rm -e GMAIL_USER=a@b.com -e GMAIL_APP_PASSWORD=x \
+               -e ALLOWED_ORIGINS='*' "$IMAGE"; then
             echo "::error::The mailer accepted ALLOWED_ORIGINS=*."
             exit 1
           fi
+          echo "::endgroup::"
 
-          echo "It must answer /healthz when configured:"
+          echo "::group::Runs as a non-root user"
+          test "$(docker run --rm --entrypoint id "$IMAGE" -u)" != "0"
+          echo "::endgroup::"
+
+          echo "::group::Answers /healthz and enforces the allowlist"
           docker run -d --name mailer -p 8787:8787 \
             -e GMAIL_USER=a@b.com -e GMAIL_APP_PASSWORD=x \
             -e ALLOWED_ORIGINS=https://example.com "$IMAGE"
-          for i in $(seq 1 20); do
-            if curl -fsS http://127.0.0.1:8787/healthz; then ok=1; break; fi
+
+          ok=0
+          for _ in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8787/healthz >/dev/null; then ok=1; break; fi
             sleep 1
           done
-          docker logs mailer
+          if [ "$ok" != "1" ]; then
+            docker logs mailer
+            docker rm -f mailer
+            echo "::error::/healthz never answered."
+            exit 1
+          fi
+
+          BODY='{"name":"a","email":"a@b.com","message":"hello there"}'
+          ENDPOINT=http://127.0.0.1:8787/api/contact
+
+          no_origin=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' -d "$BODY" "$ENDPOINT")
+          bad_origin=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' -H 'Origin: https://evil.example' \
+            -d "$BODY" "$ENDPOINT")
+
           docker rm -f mailer
-          test "$ok" = "1" || { echo "::error::/healthz never answered."; exit 1; }
+          echo "no origin: ${no_origin}, wrong origin: ${bad_origin}"
+          test "$no_origin" = "403"
+          test "$bad_origin" = "403"
+          echo "::endgroup::"
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # A cache hit, so nothing is rebuilt. This only tags and uploads the
+      # layers the smoke test just passed.
+      - name: Publish
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v7
+        with:
+          context: ./server
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha

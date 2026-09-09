@@ -16,6 +16,14 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
+  // Playwright waits on http://127.0.0.1:4173 before it starts a run. Pinning
+  // the host and port here rather than relying on Vite's defaults means the
+  // e2e job cannot hang on a preview server that came up somewhere else.
+  preview: {
+    host: '127.0.0.1',
+    port: 4173,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

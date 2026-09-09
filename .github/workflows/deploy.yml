@@ -35,9 +35,9 @@ jobs:
       url: ${{ steps.deploy.outputs.deployment-url }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -53,14 +53,14 @@ jobs:
           VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT }}
           VITE_WEB3FORMS_KEY: ${{ secrets.VITE_WEB3FORMS_KEY }}
 
-      # v4 of the action, and the wrangler version pinned explicitly.
+      # v4 of the action, and the wrangler version named rather than defaulted.
       #
-      # v3 defaulted to wrangler 3.90.0, which predates Static Assets going
-      # GA: it does not understand `run_worker_first`, and it rejects a
+      # v3 installed wrangler 3.90.0, which predates Workers Static Assets
+      # going GA: it does not understand `run_worker_first` and rejects a
       # compatibility_date newer than the runtime it shipped against. The
-      # deploy failed on that alone, with the real error swallowed by the
-      # action. The version is named here rather than left to a default,
-      # because an implicit default is exactly what broke it.
+      # deploy failed on that alone, with wrangler's real error swallowed by
+      # the action. An implicit default is what broke it, so there is no
+      # implicit default here any more.
       - name: Deploy
         id: deploy
         uses: cloudflare/wrangler-action@v4
@@ -70,9 +70,57 @@ jobs:
           wranglerVersion: '4'
           command: deploy
 
-      - name: Check the deployment answers
+      # Not "did wrangler exit 0" but "is the site actually correct at its
+      # public URL". A deploy that returns success and serves a 404, or serves
+      # the page without its security headers, is a failed deploy.
+      - name: Verify the deployment
         run: |
+          set -euo pipefail
           URL="${{ steps.deploy.outputs.deployment-url }}"
-          test -n "$URL" || { echo "::error::No deployment URL returned."; exit 1; }
-          curl -fsS -o /dev/null -w 'status %{http_code}\n' "$URL"
-          echo "Deployed to $URL" >> "$GITHUB_STEP_SUMMARY"
+          test -n "$URL" || { echo "::error::No deployment URL was returned."; exit 1; }
+
+          # A new Worker is not routable the instant the API returns success.
+          # The first request after a fresh deploy is routinely a 404, and that
+          # is propagation rather than a broken build, so this polls instead of
+          # asserting on one attempt.
+          echo "::group::Waiting for $URL"
+          code=000
+          for attempt in $(seq 1 24); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$URL" || echo 000)
+            echo "attempt ${attempt}: ${code}"
+            [ "$code" = "200" ] && break
+            sleep 5
+          done
+          echo "::endgroup::"
+          if [ "$code" != "200" ]; then
+            echo "::error::$URL did not serve 200 within two minutes (last status ${code})."
+            exit 1
+          fi
+
+          echo "::group::Response headers"
+          headers=$(curl -sSI "$URL")
+          echo "$headers"
+          echo "::endgroup::"
+
+          for header in content-security-policy strict-transport-security x-content-type-options; do
+            if ! grep -qi "^${header}:" <<<"$headers"; then
+              echo "::error::$URL is missing the ${header} header."
+              exit 1
+            fi
+          done
+
+          # The resume is a link a recruiter clicks; a 404 there is worse than
+          # a 404 anywhere else on the site.
+          resume_type=$(curl -sS -o /dev/null -w '%{content_type}' "${URL%/}/Varlee-Fofana-Resume.pdf")
+          case "$resume_type" in
+            application/pdf*) ;;
+            *) echo "::error::The resume served '${resume_type}' rather than a PDF."; exit 1 ;;
+          esac
+
+          {
+            echo "### Deployed"
+            echo ""
+            echo "- ${URL}"
+            echo "- Security headers present"
+            echo "- Resume served as ${resume_type}"
+          } >> "$GITHUB_STEP_SUMMARY"
