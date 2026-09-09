@@ -62,6 +62,26 @@ jobs:
           retention-days: 7
 
   # --------------------------------------------------------------------------
+  # Reads the Playwright version out of the lockfile so the container tag that
+  # runs the tests can never drift from the package that writes them. A whole
+  # job rather than a step, because `container:` is resolved before any step in
+  # a job gets to run.
+  # --------------------------------------------------------------------------
+  versions:
+    name: Resolve versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      playwright: ${{ steps.pw.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: pw
+        run: |
+          version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Playwright ${version}"
+
+  # --------------------------------------------------------------------------
   # The artefact every later job uses, built once rather than three times.
   # --------------------------------------------------------------------------
   build:
@@ -100,16 +120,27 @@ jobs:
   # --------------------------------------------------------------------------
   e2e:
     name: End-to-end and accessibility
-    needs: build
+    needs: [versions, build]
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
+    # The official image, tagged to match the lockfile exactly. The browser and
+    # every system library it links against are already inside it, so this job
+    # runs no apt at all.
+    #
+    # That is the point. `playwright install --with-deps` shells out to
+    # `apt-get update`, and the hosted runner image carries a Google Chrome apt
+    # source that periodically serves an index whose hash does not match its
+    # Release file. When that happens the job dies on a repository this project
+    # neither uses nor can fix. Nothing here depends on it any more.
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.versions.outputs.playwright }}-noble
+      # Runs as the runner's own uid rather than root, so files written into
+      # the workspace are owned by the user the later steps run as.
+      options: --user 1001
+
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
 
       - run: npm ci
 
@@ -117,28 +148,6 @@ jobs:
         with:
           name: dist
           path: dist
-
-      # Cached by version, so a run only pays the 100MB download when the
-      # Playwright version in the lockfile actually changes.
-      - name: Resolve Playwright version
-        id: pw
-        run: echo "version=$(node -p "require('./node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/cache@v6
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
-
-      - name: Install browser and its system libraries
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
-      # The browser binary is cached; the apt packages it links against are
-      # not, because they live outside the cached path.
-      - name: Install system libraries
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
 
       - run: npm run test:e2e
 
