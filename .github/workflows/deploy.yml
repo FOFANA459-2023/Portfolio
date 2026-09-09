@@ -73,15 +73,28 @@ jobs:
           VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT || secrets.VITE_CONTACT_ENDPOINT }}
           VITE_WEB3FORMS_KEY: ${{ vars.VITE_WEB3FORMS_KEY || secrets.VITE_WEB3FORMS_KEY }}
 
-      # The guard above proves a value reached the workflow. This proves it
-      # reached the bundle, which is a different claim: Vite only inlines a
-      # variable that is present when it runs, and a deploy that quietly ships
-      # an email address where a form should be is exactly the failure this
-      # pipeline exists to catch.
-      - name: Confirm the form is in the build
+      # The step above proves a value reached the workflow. This proves it
+      # reached the bundle, which is a different claim: Vite inlines only the
+      # VITE_* variables present when it runs, and a deploy that quietly ships
+      # an email address where a form should be is the failure this pipeline
+      # exists to catch.
+      #
+      # The assertion is that the configured value itself is in the bundle. An
+      # earlier version grepped for the fallback copy instead and failed a
+      # correct build, because that copy is in the bundle either way: the
+      # fallback is a runtime branch, not a build-time one, so Rollup keeps
+      # both sides of it. Only the inlined value actually varies.
+      #
+      # Quiet, and the needle is never echoed. Actions masks secrets in logs,
+      # but a check for a leak should not be the thing that prints one.
+      - name: Confirm the route reached the bundle
+        env:
+          ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT || secrets.VITE_CONTACT_ENDPOINT }}
+          KEY: ${{ vars.VITE_WEB3FORMS_KEY || secrets.VITE_WEB3FORMS_KEY }}
         run: |
-          if grep -rq "Email is the fastest way to reach me" dist/assets/*.js; then
-            echo "::error::The build fell back to an email address, so no delivery route was inlined. Check the name of the secret or variable."
+          needle="${ENDPOINT:-$KEY}"
+          if ! grep -rqF -- "$needle" dist/assets/*.js; then
+            echo "::error::The contact route did not reach the bundle. The value is set in the workflow but was not inlined, so the deployed site would show an email address instead of a form."
             exit 1
           fi
           echo "Contact form present, delivering through ${{ steps.contact.outputs.route }}." >> "$GITHUB_STEP_SUMMARY"
