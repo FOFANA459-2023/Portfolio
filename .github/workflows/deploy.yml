@@ -53,12 +53,22 @@ jobs:
           VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT }}
           VITE_WEB3FORMS_KEY: ${{ secrets.VITE_WEB3FORMS_KEY }}
 
+      # v4 of the action, and the wrangler version pinned explicitly.
+      #
+      # v3 defaulted to wrangler 3.90.0, which predates Static Assets going
+      # GA: it does not understand `run_worker_first`, and it rejects a
+      # compatibility_date newer than the runtime it shipped against. The
+      # deploy failed on that alone, with the real error swallowed by the
+      # action. The version is named here rather than left to a default,
+      # because an implicit default is exactly what broke it.
       - name: Deploy
         id: deploy
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: deploy
 
       - name: Check the deployment answers
         run: |
