@@ -97,7 +97,15 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # A placeholder delivery route, so the artefact the e2e job tests has a
+      # contact form in it at all. Unconfigured, the form is correctly replaced
+      # by an email address, and the tests that exercise validation would have
+      # nothing to exercise. The deploy job builds separately with the real
+      # values, so nothing here reaches production.
       - run: npm run build
+        env:
+          VITE_CONTACT_ENDPOINT: https://mailer.invalid/api/contact
 
       - name: Report bundle size
         run: |

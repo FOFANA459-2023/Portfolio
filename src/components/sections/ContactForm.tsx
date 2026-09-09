@@ -2,7 +2,10 @@ import { useId, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import type { Errors, Field } from '@/lib/validate'
 import { validateAll, validateField, limits } from '@/lib/validate'
-import { sendContactMessage, isContactConfigured } from '@/lib/contact'
+import { sendContactMessage, isContactConfigured, showSetupNotice } from '@/lib/contact'
+import { site } from '@/data/site'
+import { Button } from '@/components/ui/Button'
+import { MailIcon } from '@/components/ui/Icons'
 import { CheckIcon } from '@/components/ui/Icons'
 import { cn } from '@/lib/cn'
 
@@ -61,6 +64,38 @@ export function ContactForm() {
     }
   }
 
+  // A form that cannot deliver is not offered. Annotating it and leaving it
+  // there means a visitor writes a message, presses send and loses it, which
+  // is a worse outcome than never having been given the box. The address is
+  // the thing that always works, so that is what stands in its place.
+  //
+  // Nothing here is a failure state: no warning colour, no apology. As far as
+  // the reader is concerned this is simply how the section is built. It comes
+  // back on its own the moment a delivery route is configured.
+  if (!isContactConfigured && !showSetupNotice) {
+    return (
+      <div className="rounded-2xl border border-line-soft bg-bg-2/80 p-6 shadow-[0_24px_50px_-32px_oklch(0.1_0.02_50_/_0.8)] sm:p-9">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full border border-line text-fg-soft">
+          <MailIcon className="h-4 w-4" />
+        </span>
+
+        <h3 className="display-3 mt-5 max-w-[18ch]">Email is the fastest way to reach me.</h3>
+
+        <p className="prose-body mt-4 max-w-[44ch] text-base">
+          It lands in my inbox directly, and I read everything that arrives there.
+        </p>
+
+        <Button
+          href={`mailto:${site.email}`}
+          className="mt-7"
+          aria-label={`Send an email to ${site.email}`}
+        >
+          {site.email}
+        </Button>
+      </div>
+    )
+  }
+
   if (status === 'success') {
     return (
       <motion.div
@@ -95,12 +130,13 @@ export function ContactForm() {
       noValidate
       className="relative rounded-2xl border border-line-soft bg-bg-2/80 p-6 shadow-[0_24px_50px_-32px_oklch(0.1_0.02_50_/_0.8)] sm:p-9"
     >
-      {!isContactConfigured && (
+      {showSetupNotice && (
         <p className="mb-8 rounded-lg border border-accent/40 bg-accent-soft px-4 py-3 text-[0.875rem] leading-relaxed text-accent">
           <strong className="font-medium">Setup needed:</strong> set{' '}
           <code>VITE_CONTACT_ENDPOINT</code> to a running instance of{' '}
           <code>server/</code>, or <code>VITE_WEB3FORMS_KEY</code> to a Web3Forms access
-          key, before this form can deliver mail. See the README.
+          key, before this form can deliver mail. Shown in development only. See
+          the README.
         </p>
       )}
 

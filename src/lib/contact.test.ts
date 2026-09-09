@@ -40,6 +40,17 @@ describe('delivery route', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it('offers the setup notice only while unconfigured, and never once configured', async () => {
+    // Vitest runs in development mode, so the DEV half of the gate is true
+    // here and this asserts the half that varies. The production half is a
+    // build-time constant that Vite strips from the bundle entirely.
+    const unconfigured = await loadContact({})
+    expect(unconfigured.showSetupNotice).toBe(true)
+
+    const configured = await loadContact({ VITE_WEB3FORMS_KEY: 'test-key' })
+    expect(configured.showSetupNotice).toBe(false)
+  })
+
   it('posts to the mailer when an endpoint is set', async () => {
     const { sendContactMessage } = await loadContact({
       VITE_CONTACT_ENDPOINT: 'https://mail.example.com/api/contact',

@@ -31,6 +31,17 @@ const hasAccessKey = Boolean(accessKey && accessKey.trim().length > 0)
 
 export const isContactConfigured = hasEndpoint || hasAccessKey
 
+/**
+ * Whether to show the "set this variable" notice under the form.
+ *
+ * Development only, and not merely because it is untidy in production. It
+ * names the site's own environment variables, which is the sort of thing a
+ * visitor should never be shown, and it makes a working page look broken to
+ * the one reader it most needs to impress. In production an unconfigured form
+ * is not annotated, it is replaced.
+ */
+export const showSetupNotice = import.meta.env.DEV && !isContactConfigured
+
 export interface ContactPayload {
   name: string
   email: string
@@ -74,8 +85,13 @@ export async function sendContactMessage(payload: ContactPayload): Promise<void>
     return
   }
   if (!isContactConfigured) {
+    // Unreachable from the UI, which shows an address instead of a form when
+    // it cannot deliver. Worded for a visitor anyway, because an error message
+    // is the wrong place to find out that a build was misconfigured.
     throw new Error(
-      'The contact form is not configured yet. Set VITE_CONTACT_ENDPOINT or VITE_WEB3FORMS_KEY and rebuild.',
+      import.meta.env.DEV
+        ? 'The contact form is not configured. Set VITE_CONTACT_ENDPOINT or VITE_WEB3FORMS_KEY and rebuild.'
+        : 'This form is not available right now. Please use the email address above.',
     )
   }
 
