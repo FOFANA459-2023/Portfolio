@@ -122,16 +122,42 @@ jobs:
       - name: Verify the deployment
         run: |
           set -euo pipefail
-          URL="${{ steps.deploy.outputs.deployment-url }}"
-          test -n "$URL" || { echo "::error::No deployment URL was returned."; exit 1; }
+
+          # Verify the address the public actually uses, which is the Custom
+          # Domain, not `deployment-url`. Once `routes` are configured wrangler
+          # turns the workers.dev subdomain off, so that output names a
+          # hostname which now answers 404 -- and a check pointed at it fails
+          # every deploy while the site itself is perfectly healthy.
+          #
+          # Read out of wrangler.jsonc rather than written here, so the domain
+          # still has exactly one home in this repository. Falls back to
+          # `deployment-url` when there is no Custom Domain, which is what a
+          # workers.dev-only deployment wants.
+          DOMAIN=$(node -e "
+            const fs = require('fs');
+            const raw = fs.readFileSync('wrangler.jsonc', 'utf8').replace(/^\s*\/\/.*$/gm, '');
+            const route = (JSON.parse(raw).routes || []).find((r) => r.custom_domain);
+            process.stdout.write(route ? route.pattern : '');
+          ")
+
+          if [ -n "$DOMAIN" ]; then
+            URL="https://${DOMAIN}"
+            echo "Verifying the Custom Domain: $URL"
+          else
+            URL="${{ steps.deploy.outputs.deployment-url }}"
+            echo "No Custom Domain configured; verifying $URL"
+          fi
+          test -n "$URL" || { echo "::error::No URL to verify."; exit 1; }
 
           # A new Worker is not routable the instant the API returns success.
           # The first request after a fresh deploy is routinely a 404, and that
           # is propagation rather than a broken build, so this polls instead of
-          # asserting on one attempt.
+          # asserting on one attempt. The window is three minutes because the
+          # very first deploy onto a new Custom Domain also waits on Cloudflare
+          # issuing its certificate, which is slower than a DNS record.
           echo "::group::Waiting for $URL"
           code=000
-          for attempt in $(seq 1 24); do
+          for attempt in $(seq 1 36); do
             code=$(curl -s -o /dev/null -w '%{http_code}' "$URL" || echo 000)
             echo "attempt ${attempt}: ${code}"
             [ "$code" = "200" ] && break
@@ -139,7 +165,7 @@ jobs:
           done
           echo "::endgroup::"
           if [ "$code" != "200" ]; then
-            echo "::error::$URL did not serve 200 within two minutes (last status ${code})."
+            echo "::error::$URL did not serve 200 within three minutes (last status ${code})."
             exit 1
           fi
 
