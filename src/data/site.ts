@@ -18,9 +18,7 @@ export const site = {
   /** Sits under the name in the hero and in the page title. */
   role: 'Software Engineer',
 
-  // TODO: replace once this is deployed. index.html carries its own copy in
-  // the canonical tag and the JSON-LD block; keep the two in step.
-  url: 'https://varleefofana.com',
+  url: 'https://varleesfofana.com',
 
   email: 'fvarlee@gmail.com',
 

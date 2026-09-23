@@ -90,13 +90,42 @@ Two repository secrets and one variable make the deploy work:
 
 | Name | Kind | What it is |
 | --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | secret | A token with **Workers Scripts: Edit** |
+| `CLOUDFLARE_API_TOKEN` | secret | Create it from the **Edit Cloudflare Workers** template. *Workers Scripts: Edit* alone is not enough once `routes` are in play: attaching a Custom Domain also needs zone-level *Workers Routes: Edit*, which that template includes. |
 | `CLOUDFLARE_ACCOUNT_ID` | secret | From the Cloudflare dashboard |
 | `VITE_CONTACT_ENDPOINT` | variable | The mailer's URL, once it has a host |
 
 There is no `public/_redirects`. That is Pages syntax, and Workers rejects it
 as *"Infinite loop detected in this rule"*; the single-page fallback is
 `assets.not_found_handling` in `wrangler.jsonc` instead.
+
+### Pointing the domain at the Worker
+
+The site is served at `varleesfofana.com`. The domain is registered at GoDaddy,
+so Cloudflare has to become its DNS provider before a Worker can answer on it.
+
+The order matters. `wrangler deploy` resolves the `routes` in `wrangler.jsonc`
+at deploy time and fails the entire deploy if the zone is not in the account
+yet, which is why that block ships commented out.
+
+1. **Add the zone.** Cloudflare dashboard, *Add a site*, `varleesfofana.com`,
+   free plan. Cloudflare scans the existing records and then shows you two
+   nameservers.
+2. **Repoint the nameservers at GoDaddy.** In the domain's settings, replace
+   GoDaddy's nameservers with the two Cloudflare gave you. This is the only
+   change made at GoDaddy; the registration stays there.
+3. **Wait for Active.** The zone goes from *Pending* to *Active* in Cloudflare
+   once the change propagates, usually well under an hour. Nothing below works
+   until it does.
+4. **Uncomment the `routes` block in `wrangler.jsonc`** and push. Wrangler
+   creates the DNS records and provisions the certificate itself, for the apex
+   and for `www`.
+
+Both hostnames serve the same Worker. The canonical tag in `index.html` points
+at the apex, so the two are not competing as separate pages.
+
+Afterwards `curl -sSI https://varleesfofana.com` should answer `200` and carry a
+`content-security-policy` header. `deploy.yml` already asserts both against the
+URL it deployed to.
 
 ---
 
@@ -181,21 +210,6 @@ docker run -d --restart unless-stopped -p 8787:8787   -e GMAIL_USER=... -e GMAIL
   everything a sender typed, and `Reply-To` rather than a forged `From`, since
   Gmail rewrites the envelope sender anyway.
 
-## Still to do
-
-Marked with `TODO` in the source.
-
-### 2. Set the production domain
-
-`https://varleefofana.com` is a placeholder. It appears in exactly two places:
-
-- `src/data/site.ts` → `site.url`
-- `index.html` → the `canonical` link, `og:url`, and the JSON-LD `url`
-
-`index.html` needs its own copy because those tags are read before any JavaScript runs.
-
----
-
 ## Editing content
 
 Everything a visitor reads lives in `src/data/`. No copy is written into a component.
@@ -242,19 +256,6 @@ repos: []                                                       // "Private repo
 Screenshots are 1600×1000 WebP (16:10). They are captured at a 16:10 viewport at 2×
 and downscaled — the frame reserves their exact height before they load, so nothing
 on the page shifts.
-
----
-
-## Deploying to Cloudflare Pages
-
-| Setting | Value |
-| --- | --- |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| Node version | 20 or newer |
-| Environment variable | `VITE_WEB3FORMS_KEY` |
-
-`public/_redirects` already contains the SPA fallback (`/* /index.html 200`).
 
 ---
 

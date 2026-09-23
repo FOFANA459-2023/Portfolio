@@ -14,6 +14,23 @@
   "compatibility_date": "2026-09-09",
   "observability": { "enabled": true },
 
+  // The production domain. `custom_domain` makes wrangler create the DNS
+  // records and provision the certificates itself, so there is nothing to
+  // click in the dashboard after a deploy.
+  //
+  // These are resolved at deploy time against the zone in this account, so the
+  // zone has to exist and be Active before a deploy naming them can succeed.
+  // The domain is registered at GoDaddy and its nameservers point here; see
+  // "Pointing the domain at the Worker" in the README.
+  //
+  // www is here so that typing it does not reach a dead page. Both hostnames
+  // serve the same Worker, and the canonical tag in index.html points at the
+  // apex, so search engines are told which of the two is the real one.
+  "routes": [
+    { "pattern": "varleesfofana.com", "custom_domain": true },
+    { "pattern": "www.varleesfofana.com", "custom_domain": true }
+  ],
+
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
