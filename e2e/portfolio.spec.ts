@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import type { Locator } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 /**
@@ -114,8 +115,67 @@ test.describe('the contact form', () => {
   })
 })
 
+/**
+ * Wait for an entrance animation to land before measuring anything.
+ *
+ * axe measures the composited result, so an element scanned mid-fade is a
+ * reading of a state no visitor ever sees settled: the solid hero button
+ * caught at around 18% opacity composites to #cdc8c1 over the paper and is
+ * reported as 1.45:1 against its own label. That is a real measurement of a
+ * frame, not a real contrast bug, and it is what made these tests flaky. It
+ * failed on the runner rather than locally because CI is slow enough for the
+ * scan to win the race.
+ *
+ * Opacity is multiplied down the ancestor chain because that is what the
+ * compositor does. The button itself is never faded; the motion wrapper around
+ * it is, so reading the button's own computed opacity would always say 1.
+ */
+async function entranceSettled(locator: Locator) {
+  await expect(locator).toBeVisible()
+  await expect
+    .poll(
+      () =>
+        locator.evaluate((el) => {
+          let opacity = 1
+          let node: Element | null = el
+          while (node) {
+            opacity *= Number(getComputedStyle(node).opacity)
+            node = node.parentElement
+          }
+          return opacity
+        }),
+      { timeout: 15_000 },
+    )
+    .toBeGreaterThan(0.99)
+}
+
+/**
+ * Wait for a sliding panel to stop moving, by reading its position until two
+ * consecutive samples agree. The case study arrives on a spring, which has no
+ * fixed duration to wait out.
+ */
+async function positionSettled(locator: Locator) {
+  let previous = Number.NaN
+  await expect
+    .poll(
+      async () => {
+        const box = await locator.boundingBox()
+        const x = box?.x ?? Number.NaN
+        const stable = x === previous
+        previous = x
+        return stable
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true)
+}
+
 test.describe('accessibility', () => {
   test('has no detectable WCAG A or AA violations on the page', async ({ page }) => {
+    await entranceSettled(
+      page.locator('#top').getByRole('button', { name: /see the projects/i }),
+    )
+
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()
@@ -128,7 +188,9 @@ test.describe('accessibility', () => {
 
   test('has none inside an open case study either', async ({ page }) => {
     await page.getByRole('button', { name: /read the case study/i }).first().click()
-    await expect(page.getByRole('dialog')).toBeVisible()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await positionSettled(dialog)
 
     // Scoped to the dialog. The page behind it is still in the DOM under a
     // 55% scrim, and axe measures the composited result, so it reports the
