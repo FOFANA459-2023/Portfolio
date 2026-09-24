@@ -140,7 +140,7 @@ export const projects: Project[] = [
       'Playwright',
     ],
     repos: [{ label: 'Repository', url: 'https://github.com/FOFANA459-2023/ChatTobira' }],
-    liveUrl: 'https://chattobira.fvarlee.workers.dev',
+    liveUrl: 'https://chattobira.com',
     liveLabel: 'Open the app',
     access:
       'Open to try, with three free questions and one free practice test. Full access is invite-only, because the course material behind it is copyrighted.',
