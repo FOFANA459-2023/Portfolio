@@ -250,11 +250,11 @@ export const projects: Project[] = [
     title: 'Portfolio',
     category: 'Personal site',
     summary:
-      'The site you are reading. Built to be assessed in thirty seconds by someone who has forty of these to get through.',
+      'A personal portfolio built from scratch to showcase my projects, technical skills, and experience through a clean, interactive interface.',
     problem:
       'A CV says what someone was responsible for. It cannot show whether they can actually build the thing, and a list of repository links asks a reader to go and find out for themselves, which nobody hiring has time to do.',
     solution:
-      'One page that puts the work first: three products, each with a live link, the numbers that matter and a case study behind it. Everything a reader needs to decide is above the fold of its own section, and the depth is there for whoever wants it.',
+      'A page that answers the question with the work itself. Every project is named before any of them is presented, each one links to something running, and each carries the figures behind it and a case study for whoever wants the detail.',
     features: [
       'Every project opens into a full case study: the problem, the build, and the parts that turned out to be harder than they look',
       'An index at the top of the projects section names all of them before any one is presented, for a reader who has not decided to read yet',
