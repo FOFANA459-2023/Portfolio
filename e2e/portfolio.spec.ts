@@ -44,8 +44,13 @@ test.describe('the page', () => {
 
 test.describe('projects', () => {
   test('names every project in the index before presenting any of them', async ({ page }) => {
+    // Counted against the projects actually on the page rather than a literal,
+    // which is the invariant this is really about: the index is only doing its
+    // job if it names every project, whatever the number happens to be.
     const index = page.getByRole('navigation', { name: /projects at a glance/i })
-    await expect(index.getByRole('button')).toHaveCount(3)
+    const presented = await page.locator('article[id^="project-"]').count()
+    expect(presented).toBeGreaterThan(0)
+    await expect(index.getByRole('button')).toHaveCount(presented)
   })
 
   test('jumps to a project from its index row', async ({ page }) => {

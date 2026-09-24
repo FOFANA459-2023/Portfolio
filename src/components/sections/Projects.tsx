@@ -11,14 +11,14 @@ import { CaseStudy } from './CaseStudy'
 /**
  * The second band: charcoal. The centre of the page.
  *
- * Three projects, each given a full stretch of the page rather than a cell in a
- * grid. A three-up grid of cards makes every project look like a weekend, and
- * two of these are running in production.
+ * Every project gets a full stretch of the page rather than a cell in a grid.
+ * A grid of cards makes each one look like a weekend, and these are running in
+ * production.
  *
  * The index above them is the concession to the reader who has not decided to
- * read yet: the full treatment costs three screens of scrolling before the
- * third project is even named, and someone assessing this for a role wants all
- * three named in the first one.
+ * read yet: the full treatment costs a screen of scrolling per project before
+ * the last one is even named, and someone assessing this for a role wants all
+ * of them named in the first one.
  */
 export function Projects() {
   const [selected, setSelected] = useState<Project | null>(null)

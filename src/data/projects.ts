@@ -7,6 +7,8 @@ import chattobiraHome from '@/assets/projects/chattobira-home.webp'
 import revelleHome from '@/assets/projects/revelle-home.webp'
 import revelleShop from '@/assets/projects/revelle-shop.webp'
 import revelleProduct from '@/assets/projects/revelle-product.webp'
+import portfolioHero from '@/assets/projects/portfolio-hero.webp'
+import portfolioCaseStudy from '@/assets/projects/portfolio-case-study.webp'
 
 /* ---------------------------------------------------------------------------
  * The only place project content lives. Every component below `sections/`
@@ -239,6 +241,72 @@ export const projects: Project[] = [
     ],
     year: '2026',
     role: 'Software engineer: storefront, API, admin, deployment',
+    status: 'live',
+  },
+
+  {
+    id: 'portfolio',
+    number: '04',
+    title: 'Portfolio',
+    category: 'Personal site',
+    summary:
+      'The site you are reading. Built to be assessed in thirty seconds by someone who has forty of these to get through.',
+    problem:
+      'A CV says what someone was responsible for. It cannot show whether they can actually build the thing, and a list of repository links asks a reader to go and find out for themselves, which nobody hiring has time to do.',
+    solution:
+      'One page that puts the work first: three products, each with a live link, the numbers that matter and a case study behind it. Everything a reader needs to decide is above the fold of its own section, and the depth is there for whoever wants it.',
+    features: [
+      'Every project opens into a full case study: the problem, the build, and the parts that turned out to be harder than they look',
+      'An index at the top of the projects section names all of them before any one is presented, for a reader who has not decided to read yet',
+      'A contact form that validates as you go, and which replaces itself with an email address rather than shipping a box that silently swallows messages',
+      'The resume downloads as a PDF from the hero and from the contact section, because that is often the first thing a recruiter wants',
+      'Fully keyboard navigable, with a skip link, focus traps on both dialogs and focus returned to whatever opened them',
+      'Honours the operating system reduced-motion setting, which removes the smooth scrolling entirely rather than just shortening it',
+    ],
+    engineering: [
+      'The page alternates between two grounds, and that alternation is the whole design. Rather than two sets of colour utilities, one set of semantic names points at variables each band redefines, so a component says bg-bg text-fg once and is correct on both. There is not a single dark-mode variant in the codebase. The names have to be redeclared as literal values rather than as var() indirection, because an indirection resolves once at the root and then inherits the substituted result, so redefining the inner variable further down the tree does nothing at all.',
+      'Smooth scrolling drives the real window scroll position, so IntersectionObserver and scroll-linked animation keep working untouched. Jumps compute an absolute target from window.scrollY rather than handing the library an element: it resolves an element against its own internal position, which is stale after any scroll it did not drive, so a find-in-page match or a screen reader jumping to a landmark makes it land short by exactly the distance it missed. A jump that should have reached 3137 stopped at 2041.',
+      'The Worker in front of the static assets exists for one reason: response headers. A pure assets deployment cannot set a Content-Security-Policy, so this one does, along with HSTS and the rest, and the policy is exported so it can be asserted rather than assumed. A policy that forbids the host the contact form posts to fails silently in the browser, with nothing in the page to explain it.',
+      'Deploying is gated on a green pipeline and then checks its own work: that the public URL answers 200, that the security headers are actually on the response, and that the resume serves as a PDF rather than a 404. It verifies the custom domain rather than the deployment URL, because configuring routes makes wrangler turn the workers.dev subdomain off and a check pointed at it would fail every deploy while the site was perfectly healthy.',
+      'Accessibility is a gate, not a review. Axe runs over the page and over an open case study on every push, and the scan waits for entrance animations to land first: it measures the composited result, so a solid button caught partway through a fade reads as 1.45:1 against its own label and fails a build whose site is fine.',
+      'Everything a visitor reads lives in one directory, which makes the writing testable. The suite enforces the editorial rules that would otherwise be undone by the next edit: no dashes in prose, no location, every screenshot described in more than a filename, and every outbound link over https.',
+    ],
+    metrics: [
+      { value: '93', label: 'Tests, unit and end to end' },
+      { value: '0', label: 'WCAG AA violations, gated per push' },
+      { value: '2', label: 'Grounds, no dark-mode variants' },
+    ],
+    stack: [
+      'React 19',
+      'TypeScript',
+      'Vite',
+      'Tailwind CSS v4',
+      'Motion',
+      'Lenis',
+      'Cloudflare Workers',
+      'Vitest',
+      'Playwright',
+      'axe-core',
+      'GitHub Actions',
+      'Docker',
+    ],
+    repos: [{ label: 'Repository', url: 'https://github.com/FOFANA459-2023/Portfolio' }],
+    liveUrl: 'https://varleesfofana.com',
+    liveLabel: 'You are here',
+    shots: [
+      {
+        src: portfolioHero,
+        alt: 'The portfolio home screen: the name Varlee Fofana set large in a serif on warm ivory, a one line positioning statement, buttons to see the projects and download the resume, and a cut-out portrait standing on the closing rule.',
+        caption: 'Home: the work, one scroll away',
+      },
+      {
+        src: portfolioCaseStudy,
+        alt: 'A case study open as a panel over the dimmed projects section, showing the myScholy scholarship board, the project number and status, a summary set large, and three figures underneath it.',
+        caption: 'Case study: opens as a panel, closes on Escape',
+      },
+    ],
+    year: '2026',
+    role: 'Design, build, accessibility, deployment',
     status: 'live',
   },
 ]
