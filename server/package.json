@@ -12,6 +12,6 @@
     "test-email": "node send-test.mjs"
   },
   "dependencies": {
-    "nodemailer": "^10.0.10"
+    "nodemailer": "^10.0.13"
   }
 }
